@@ -51,6 +51,9 @@ def main(argv: list[str] | None = None) -> int:
     except ClaudeCLINotFoundError as e:
         print(f"오류: {e}", file=sys.stderr)
         return 1
+    except RuntimeError as e:
+        print(f"재작성 실패: {e}", file=sys.stderr)
+        return 1
 
     if args.json:
         print(json.dumps({

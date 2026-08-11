@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-08-12 · R17 (타임아웃 재시도 버그 수정)
+
+- **발굴(버그)**: rewrite 재시도 except 절에 subprocess.TimeoutExpired 누락 — 타임아웃이 재시도를 우회하고 원시 트레이스백 노출 (훅은 fail-open이라 무사, CLI·/pm 경로 노출). CLI는 최종 RuntimeError도 미포획
+- **완료**: except 절에 TimeoutExpired 추가, CLI에 RuntimeError → "재작성 실패: ..." + rc=1
+- **실측**: 오프라인 테스트 2건 신설(call_claude 몽키패치) — 타임아웃 1회 후 성공 시 2회 호출·정상 결과 / 소진 시 RuntimeError. 전체 27/27 OK
+- **다음 인수 지점**: 세션 처리 가능 백로그 사실상 소진 — 다음 라운드 신규 발굴 없으면 종료 보고(사용자 승인 대기: 스킵 기준, Phase 3 MCP 게이트)
+
 ## 2026-08-12 · R16 (/pm 백엔드 응답성 — 축약 메타 + 60s 캡)
 
 - **발굴**: pm_command.py가 전체 메타(R7 실측 avg 41.4s·max 58.3s) + timeout=180·retries=1 — 인라인 대기 경로인데 최악 ~6분 블로킹 가능

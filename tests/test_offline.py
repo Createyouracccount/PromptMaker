@@ -88,6 +88,46 @@ class TestBuildMetaPrompt(unittest.TestCase):
             self.assertIn(stem, meta)
 
 
+class TestRewriteRetry(unittest.TestCase):
+    """Retry loop must treat timeouts as attempt failures, not crash through."""
+
+    def _patch_call_claude(self, side_effects):
+        import promptmaker.engine as engine
+        calls = {"n": 0}
+
+        def fake(prompt, model, timeout=180):
+            effect = side_effects[min(calls["n"], len(side_effects) - 1)]
+            calls["n"] += 1
+            if isinstance(effect, Exception):
+                raise effect
+            return effect
+
+        self._orig = engine.call_claude
+        engine.call_claude = fake
+        self.addCleanup(lambda: setattr(engine, "call_claude", self._orig))
+        return calls
+
+    def test_timeout_is_retried(self):
+        import subprocess as sp
+
+        from promptmaker.engine import rewrite
+
+        ok = '{"intent": "fix", "rewritten_prompt": "다시 쓴 프롬프트", "changes": ["c"]}'
+        calls = self._patch_call_claude([sp.TimeoutExpired(cmd="claude", timeout=1), ok])
+        result = rewrite("로그인 버그 고쳐줘", "fable-5", retries=1)
+        self.assertEqual(calls["n"], 2)
+        self.assertEqual(result.rewritten_prompt, "다시 쓴 프롬프트")
+
+    def test_exhausted_retries_raise_runtime_error(self):
+        import subprocess as sp
+
+        from promptmaker.engine import rewrite
+
+        self._patch_call_claude([sp.TimeoutExpired(cmd="claude", timeout=1)])
+        with self.assertRaises(RuntimeError):
+            rewrite("로그인 버그 고쳐줘", "fable-5", retries=1)
+
+
 class TestNormalizeModel(unittest.TestCase):
     def test_strips_suffix(self):
         self.assertEqual(normalize_model("claude-fable-5[1m]"), "fable-5")

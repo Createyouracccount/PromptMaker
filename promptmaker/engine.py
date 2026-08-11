@@ -166,7 +166,7 @@ def rewrite(
             output = call_claude(meta, rewriter_model, timeout=timeout)
             data = parse_json_output(output)
             break
-        except (ValueError, json.JSONDecodeError, RuntimeError) as e:
+        except (ValueError, json.JSONDecodeError, RuntimeError, subprocess.TimeoutExpired) as e:
             last_err = e
     else:
         raise RuntimeError(f"rewrite failed after {retries + 1} attempts: {last_err}")
