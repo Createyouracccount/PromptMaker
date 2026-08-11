@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-08-12 · R14 (오프라인 유닛 테스트 신설 — 회귀 안전망)
+
+- **발굴**: repo에 유닛 테스트 전무 — 루프가 커밋을 계속 쌓는 구조인데 회귀 안전망이 없음
+- **완료**: tests/test_offline.py (stdlib unittest, LLM 호출·네트워크 없음) — parse_json_output(펜스·주변 텍스트·실패), resolve_profile 별칭, build_meta_prompt(full/concise 길이 불변식 <700자), normalize_model([1m] 접미사·mythos→fable), 감지 우선순위(transcript>settings, local>project), 훅 스킵 규칙(슬래시·#raw·#rawdata 오탐·단문·장문), estimate_tokens(한/영 제수·단어 하한). pm_hook은 하이픈 경로라 importlib 로드
+- **실측**: `python3 -m unittest discover tests` → 25/25 OK (0.003s)
+- **다음 인수 지점**: 백로그 — (선택) 신 루브릭 골든셋 전체 재평가, 스킵 기준·Phase 3 게이트는 사용자 승인 대기
+
 ## 2026-08-12 · R13 (심판 루브릭에 조사 지시 예외 명문화 — 백로그 해소)
 
 - **발굴**: 엔진 재작성 규칙은 "조사 지시는 가정 아님(표시 불요)"인데 심판 fidelity 루브릭에는 이 예외가 없어 규칙-루브릭 불일치 — 실제로 g01·g05·g11·g19 등이 조사 절차 추가를 이유로 fidelity 4점

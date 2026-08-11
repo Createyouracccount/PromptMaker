@@ -39,6 +39,7 @@ promptmaker "대충 쓴 요청" --model fable-5          # 재작성 결과 출�
 promptmaker "요청" --model haiku-4-5 --json        # JSON 출력
 promptmaker "요청" --concise                       # 축약 메타프롬프트 (빠름, 훅과 동일 경로)
 python3 eval/run_eval.py                           # 골든셋 평가 (repo 안에서)
+python3 -m unittest discover tests                 # 오프라인 테스트 (LLM 호출 없음)
 ```
 
 Claude Code 안에서: `/pm 대충 쓴 요청` → 현재 모델에 맞게 재작성 후 수행.
