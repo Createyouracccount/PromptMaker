@@ -29,6 +29,10 @@ def main(argv: list[str] | None = None) -> int:
         "--rewriter-model", default=DEFAULT_REWRITER_MODEL,
         help=f"재작성에 사용할 모델 (기본: {DEFAULT_REWRITER_MODEL})",
     )
+    parser.add_argument(
+        "--concise", action="store_true",
+        help="축약 메타프롬프트 사용 (빠름 — 훅 자동 모드와 동일 경로, 품질 경미 하락 가능)",
+    )
     parser.add_argument("--json", action="store_true", help="JSON으로 출력")
     parser.add_argument("--version", action="version", version=__version__)
     args = parser.parse_args(argv)
@@ -37,7 +41,7 @@ def main(argv: list[str] | None = None) -> int:
     if not raw.strip():
         parser.error("빈 프롬프트입니다.")
 
-    result = rewrite(raw, args.model, rewriter_model=args.rewriter_model)
+    result = rewrite(raw, args.model, rewriter_model=args.rewriter_model, concise=args.concise)
 
     if args.json:
         print(json.dumps({
