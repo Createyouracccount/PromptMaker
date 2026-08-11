@@ -45,7 +45,7 @@ python3 -m unittest discover tests                 # 오프라인 테스트 (LLM
 Claude Code 안에서: `/pm 대충 쓴 요청` → 현재 모델에 맞게 재작성 후 수행.
 훅 자동 모드: install.sh가 출력하는 settings 스니펫 참조. `#raw` 태그로 우회, 10토큰 미만·800자 초과는 자동 무개입.
 
-요구사항: `claude` CLI 설치·로그인 (별도 API 키 불필요).
+요구사항: Python 3.10+, `claude` CLI 설치·로그인 (별도 API 키 불필요). macOS/Linux 검증됨, Windows 미검증.
 
 ## 현재 상태
 

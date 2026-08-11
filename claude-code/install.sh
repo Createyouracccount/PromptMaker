@@ -11,8 +11,9 @@ echo "✓ /pm 커맨드 설치됨: ~/.claude/commands/pm.md"
 
 cat <<EOF
 
-[선택] 훅 자동 모드 — 축약 메타프롬프트로 재작성 14.5~19.2s 실측 (내부 28s 캡, 초과 시 무개입 통과).
-G2-3 게이트 PASS (심판 3차, LOOP_LOG.md R7). 아래를 프로젝트 .claude/settings.json "hooks"에 추가:
+[선택] 훅 자동 모드 — 프롬프트 제출 시 자동으로 재작성해 컨텍스트로 주입합니다.
+재작성은 보통 15~20초이며, 28초 안에 끝나지 않으면 개입 없이 원문 그대로 전달됩니다.
+활성화하려면 아래를 프로젝트 .claude/settings.json "hooks"에 추가:
 {
   "hooks": {
     "UserPromptSubmit": [
