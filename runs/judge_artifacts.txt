@@ -1,0 +1,38 @@
+=== 파일 목록 (이번 세션 신규/변경) ===
+- promptmaker/detect.py
+- promptmaker/engine.py
+- claude-code/hooks/pm_hook.py
+- claude-code/commands/pm.md
+- scripts/pm_command.py
+- claude-code/install.sh
+- GATES.md
+
+=== 실측 로그 원문 ===
+[runs/hook.log]
+2026-08-11 02:00:09 skip (slash-command): '/help me'
+2026-08-11 02:00:09 skip (too-short): '짧음'
+2026-08-11 02:00:09 skip (raw-tag): '#raw 그대로 보내줘 이 프롬프트를 절대 바꾸지마'
+2026-08-11 02:01:02 rewrote (fable-5, 42.8s): '로그인 버그 고쳐줘 빨리'
+2026-08-11 02:01:54 skip (already-detailed): '당신은 Claude Code 사용자를 위한 프롬프트 재작성 엔진이다. 사용자가 대충 쓴 요청(RAW)을 대상'
+2026-08-11 02:02:23 rewrote (fable-5, 31.3s): '성능 개선해줘 느려서 답답해'
+2026-08-11 02:04:17 skip (recursion-guard)
+2026-08-11 02:05:03 rewrote (fable-5, 49.3s): '코드리뷰 해줘 꼼꼼하게 부탁해'
+2026-08-11 02:06:54 rewrote (fable-5, 49.6s): '배포 자동화 하고싶어 도와줘'
+2026-08-11 02:07:41 rewrote (fable-5, 46.5s): '주석 좀 달아줘 이해하기 쉽게'
+
+[runs/pm_command.log]
+2026-08-11 02:09:24 ok target=fable-5 raw='readme 파일 하나 써줘'
+
+=== 훅 입력 JSON 실측 (R1) ===
+{"session_id":"3350a6a6...","transcript_path":"...jsonl","cwd":"...","prompt_id":"...","permission_mode":"bypassPermissions","hook_event_name":"UserPromptSubmit","prompt":"안녕이라고만 답해"}  # model 필드 없음
+=== 지연 실측 ===
+CLI 기동(사소한 프롬프트): 10.9s / 훅 재작성: 42.9s, 31.3s, 49.3s, 49.6s, 46.5s (timeout 60 설정)
+=== fidelity subset 판정 (before: Phase1 스냅샷 eval/results_phase1_snapshot.json) ===
+before 지적: g05, g19 (2/5) / after 지적: g05 (1/5; g13은 '가정을 명시적으로 표시해 왜곡 없이'로 해소)
+subset fidelity 평균: before 4.0 → after 4.0 (수치 불변)
+=== 프로필 차이 (diff_judge, results.json) ===
+g01: a=True b=True diff=True
+g05: a=True b=True diff=True
+g09: a=True b=True diff=True
+g18: a=True b=True diff=True
+g19: a=True b=True diff=True

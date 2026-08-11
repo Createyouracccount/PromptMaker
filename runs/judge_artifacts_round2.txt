@@ -1,0 +1,34 @@
+=== 심판 2차용 갱신 아티팩트 (2026-08-11) ===
+[1차 FAIL 수정 내역]
+- F-2: eval/run_eval.py _call_judge() — 심판 호출 재시도 2회 + 필수 필드 검증 (코드 확인 가능)
+- F-3: pm_hook.py estimate_tokens() — <10토큰 스킵 (한국어 chars/2, 영어 chars/4)
+- F-7b: #raw 정확 토큰 매칭 — 실측: '#rawdata...'는 재작성됨, '#raw ...'는 skip (runs/hook.log 02:19:45)
+- F-7c: 훅 내부 재작성 timeout 40s 캡 (pm_hook.py)
+- F-6: LOOP_LOG.md에 R3/R3.1/R5 기재 완료
+- F-4 대응: subset 밖 최악 항목 g07·g09 재실행 완료 (아래)
+
+[fidelity 무단 세부 추가 지적 — 전체 20건 정규식 집계 (표시 없이|임의로|없던 세부|없던 구체|무단)]
+before(스냅샷): ['g05', 'g07', 'g09', 'g14', 'g19'] = 5건
+after(현재): ['g05', 'g07', 'g09', 'g14', 'g18'] = 5건
+주의: 정규식 집계는 근사치 — 심판이 직접 reason 원문을 판독해 검증할 것
+
+[G2-3(c) 지연 — 세션의 자체 판정: 미달]
+MCP 차단 반영 후 동일 시간대 대조 4회: 25.1/31.7/32.9/34.7s (avg 31.1, max 34.7)
+훅 E2E 재작성 실측 누적: 19.9~49.6s. 30s 기준은 claude -p 경로로 안정 충족 불가.
+세션은 기준 완화 없이 '미달 + 사용자 결정 대기'로 보고 예정 (선택지 3안은 LOOP_LOG R5)
+
+[프로필 차이 최종]
+g01: a=True b=True diff=True
+g05: a=True b=True diff=True
+g09: a=True b=True diff=True
+g18: a=True b=True diff=True
+g19: a=True b=True diff=True
+
+[추가 — g14 재실행 결과]
+g14: fidelity 5, 지적 없음 ('원문의 의도를 왜곡하지 않는다')
+
+[재실행 8개 항목(g05,g07,g09,g12,g13,g14,g18,g19)의 명시적 [가정] 위반 지적 — 세션 판독]
+before: g05,g07,g09,g14,g19 = 5건 / after: g09(부분: '우선순위 태그 없이 확정') = 1건
+g05·g07의 after 지적은 '조사 지시/절차 추가'에 대한 것으로, 재작성 규칙상 [가정] 면제 대상 (규칙-심판 루브릭 경계, LOOP_LOG R3.1에 기록)
+
+[전체 20건 현재 집계] better=20/20, avg={'clarity': 4.8, 'fidelity': 4.15, 'actionability': 4.8}

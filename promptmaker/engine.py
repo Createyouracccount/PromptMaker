@@ -1,0 +1,169 @@
+"""Core rewriting engine.
+
+Pipeline: (raw prompt, target model) -> meta-prompt with model profile
+-> LLM rewrite via `claude -p` -> parsed result.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import subprocess
+from dataclasses import dataclass
+from pathlib import Path
+
+PROFILES_DIR = Path(__file__).parent / "profiles"
+
+# Accepted target-model spellings -> profile file stem
+MODEL_ALIASES = {
+    "fable-5": "fable-5",
+    "claude-fable-5": "fable-5",
+    "fable": "fable-5",
+    "opus-5": "opus-5",
+    "claude-opus-5": "opus-5",
+    "opus": "opus-5",
+    "sonnet-5": "sonnet-5",
+    "claude-sonnet-5": "sonnet-5",
+    "sonnet": "sonnet-5",
+    "haiku-4-5": "haiku-4-5",
+    "claude-haiku-4-5": "haiku-4-5",
+    "haiku": "haiku-4-5",
+}
+
+DEFAULT_REWRITER_MODEL = "claude-haiku-4-5"
+
+META_PROMPT_TEMPLATE = """\
+당신은 Claude Code 사용자를 위한 프롬프트 재작성 엔진이다. 사용자가 대충 쓴 요청(RAW)을 \
+대상 모델({target_model})에 가장 잘 맞는 프롬프트로 재작성한다.
+
+<공통 규칙>
+{common_profile}
+</공통 규칙>
+
+<대상 모델 프로필 — 이 규칙이 공통 규칙보다 우선한다>
+{model_profile}
+</대상 모델 프로필>
+
+<RAW>
+{raw_prompt}
+</RAW>
+
+재작성 규칙:
+- RAW에 없는 사실(파일명, 스택, 에러 내용)을 지어내지 마라. 모르는 것은 조사 지시로 바꾸거나 [가정: ...]으로 표시하라.
+- RAW에 없는 세부 사항(구체적 항목, 기준 수치, 기술 선택, 방법론 이름)을 추가할 때는 반드시 그 문장에 [가정: 이유]를 붙여라. [가정] 없는 무단 구체화는 실패로 간주된다. 단, 조사 지시("먼저 ~를 파악하라")는 가정이 아니므로 표시가 필요 없다.
+  예시 — 나쁨: "OWASP Top 10 기준으로 점검하라" / 좋음: "OWASP Top 10 기준으로 점검하라 [가정: 웹 보안 점검의 표준 기준이므로. 다른 기준이 있으면 알려달라]"
+- RAW의 언어를 유지하라.
+- 재작성된 프롬프트는 사용자가 그대로 복사해 Claude Code에 붙여넣을 완성문이어야 한다.
+- rewritten_prompt는 700자 이내로 작성하라. 길이보다 밀도가 중요하다 — 원문이 단순하면 재작성도 짧아야 한다.
+
+아래 JSON만 출력하라 (다른 텍스트 금지):
+{{
+  "intent": "fix|build|research|debug|refactor|docs|general 중 하나",
+  "rewritten_prompt": "재작성된 프롬프트 전문",
+  "changes": ["무엇을 왜 바꿨는지 1~3개, 각 한 문장"]
+}}
+"""
+
+
+@dataclass
+class RewriteResult:
+    intent: str
+    rewritten_prompt: str
+    changes: list[str]
+    target_model: str
+    raw_prompt: str
+
+
+def resolve_profile(target_model: str) -> str:
+    key = target_model.strip().lower()
+    if key not in MODEL_ALIASES:
+        valid = sorted(set(MODEL_ALIASES.values()))
+        raise ValueError(f"unknown target model {target_model!r}; valid: {valid}")
+    return MODEL_ALIASES[key]
+
+
+def load_profile(stem: str) -> str:
+    return (PROFILES_DIR / f"{stem}.md").read_text(encoding="utf-8")
+
+
+CONDENSED_TEMPLATE = """\
+당신은 프롬프트 재작성기다. RAW를 Claude {target_model}에 맞게 재작성하라.
+{target_model} 규칙: {condensed_profile}
+공통: RAW에 없는 사실을 지어내지 말 것 — 모르면 조사 지시로 바꾸고, 추가 세부에는 [가정: 이유] 필수. RAW 언어 유지. rewritten_prompt는 700자 이내.
+<RAW>
+{raw_prompt}
+</RAW>
+JSON만 출력: {{"intent": "fix|build|research|debug|refactor|docs|general", "rewritten_prompt": "...", "changes": ["1~3개, 각 한 문장"]}}
+"""
+
+
+def build_meta_prompt(raw_prompt: str, target_model: str, concise: bool = False) -> str:
+    stem = resolve_profile(target_model)
+    if concise:
+        # Latency-critical paths (hook): 316-char meta measured max 21.9s vs
+        # full meta max 58.3s in the same window (LOOP_LOG R7).
+        condensed = (PROFILES_DIR / "condensed" / f"{stem}.md").read_text(encoding="utf-8").strip()
+        return CONDENSED_TEMPLATE.format(
+            target_model=stem, condensed_profile=condensed, raw_prompt=raw_prompt.strip()
+        )
+    return META_PROMPT_TEMPLATE.format(
+        target_model=stem,
+        common_profile=load_profile("_common"),
+        model_profile=load_profile(stem),
+        raw_prompt=raw_prompt.strip(),
+    )
+
+
+def call_claude(prompt: str, model: str, timeout: int = 180) -> str:
+    # --strict-mcp-config + empty config: skip loading the user's MCP servers.
+    # The rewriter needs no tools; this cut measured latency 32.0s -> 25.5s.
+    proc = subprocess.run(
+        ["claude", "-p", "--model", model,
+         "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}'],
+        input=prompt,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(f"claude -p failed (rc={proc.returncode}): {proc.stderr[:500]}")
+    return proc.stdout.strip()
+
+
+def parse_json_output(text: str) -> dict:
+    """Extract the first JSON object from model output, tolerating code fences."""
+    fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+    candidate = fenced.group(1) if fenced else text
+    start = candidate.find("{")
+    end = candidate.rfind("}")
+    if start == -1 or end == -1:
+        raise ValueError(f"no JSON object in output: {text[:200]}")
+    return json.loads(candidate[start : end + 1])
+
+
+def rewrite(
+    raw_prompt: str,
+    target_model: str,
+    rewriter_model: str = DEFAULT_REWRITER_MODEL,
+    retries: int = 2,
+    timeout: int = 180,
+    concise: bool = False,
+) -> RewriteResult:
+    meta = build_meta_prompt(raw_prompt, target_model, concise=concise)
+    last_err: Exception | None = None
+    for _ in range(retries + 1):
+        try:
+            output = call_claude(meta, rewriter_model, timeout=timeout)
+            data = parse_json_output(output)
+            break
+        except (ValueError, json.JSONDecodeError, RuntimeError) as e:
+            last_err = e
+    else:
+        raise RuntimeError(f"rewrite failed after {retries + 1} attempts: {last_err}")
+    return RewriteResult(
+        intent=str(data.get("intent", "general")),
+        rewritten_prompt=str(data["rewritten_prompt"]),
+        changes=[str(c) for c in data.get("changes", [])],
+        target_model=resolve_profile(target_model),
+        raw_prompt=raw_prompt,
+    )

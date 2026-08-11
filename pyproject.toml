@@ -1,0 +1,19 @@
+[project]
+name = "promptmaker"
+version = "0.1.0"
+description = "Model-aware prompt refinement tool for Claude Code users"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+promptmaker = "promptmaker.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["promptmaker*"]
+
+[tool.setuptools.package-data]
+promptmaker = ["profiles/*.md"]

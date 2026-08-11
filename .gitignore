@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+# runtime logs may contain user prompts — never commit
+runs/hook.log
+runs/pm_command.log
+.DS_Store
