@@ -23,14 +23,22 @@
 | [PLAN.md](PLAN.md) | 단계별 로드맵과 각 단계의 완료 기준 |
 | [LOG.md](LOG.md) | 진행 원장 — 날짜별 확인 사실·결정·다음 할 일 |
 
-## 사용법 (MVP)
+## 설치 (Quick Start)
 
 ```bash
+git clone https://github.com/Createyouracccount/PromptMaker.git
 cd PromptMaker
-python3 -m promptmaker.cli "대충 쓴 요청" --model fable-5        # 재작성 결과 출력
-python3 -m promptmaker.cli "요청" --model haiku-4-5 --json      # JSON 출력
-python3 eval/run_eval.py                                        # 골든셋 평가
-bash claude-code/install.sh                                     # /pm 슬래시 커맨드 설치
+pip install .                    # promptmaker CLI 설치
+bash claude-code/install.sh      # /pm 슬래시 커맨드 설치 (Claude Code용, 선택)
+```
+
+## 사용법
+
+```bash
+promptmaker "대충 쓴 요청" --model fable-5          # 재작성 결과 출력
+promptmaker "요청" --model haiku-4-5 --json        # JSON 출력
+promptmaker "요청" --concise                       # 축약 메타프롬프트 (빠름, 훅과 동일 경로)
+python3 eval/run_eval.py                           # 골든셋 평가 (repo 안에서)
 ```
 
 Claude Code 안에서: `/pm 대충 쓴 요청` → 현재 모델에 맞게 재작성 후 수행.

@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-08-12 · R11 (README 온보딩 — clone→pip install 경로)
+
+- **발굴**: README 사용법이 연구 폴더 내부 실행 기준 — GitHub 방문자의 clone→설치→실행 경로 부재
+- **완료**: Quick Start(clone + `pip install .` + install.sh) 신설, 사용법을 설치된 `promptmaker` 명령 기준으로 갱신, `--concise` 반영
+- **실측**: venv에 재설치 후 `promptmaker --help`로 문서화한 플래그(-m/--json/--concise) 전부 존재 확인
+- **다음 인수 지점**: R8~R10 항목의 백로그 계속 (스킵 기준 재검토는 사용자 승인 대기)
+
 ## 2026-08-12 · R8~R10 (GitHub 공개 + 배포 품질 라운드)
 
 - **공개 전 정리**: 개인 절대경로 3곳 제거 — pm.md는 `__PROMPTMAKER_ROOT__` placeholder + install.sh sed 치환으로 전환(하드코딩 경로는 이식성 버그이기도 했음). 재설치 실측으로 치환 동작 확인. 크리덴셜 스캔 결과 없음. `.gitignore`에 runs/hook.log·pm_command.log 추가(런타임 로그는 사용자 프롬프트 포함 가능 — 커밋 금지)
