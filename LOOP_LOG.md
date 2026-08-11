@@ -5,6 +5,15 @@
 
 ---
 
+## 2026-08-12 · R8~R10 (GitHub 공개 + 배포 품질 라운드)
+
+- **공개 전 정리**: 개인 절대경로 3곳 제거 — pm.md는 `__PROMPTMAKER_ROOT__` placeholder + install.sh sed 치환으로 전환(하드코딩 경로는 이식성 버그이기도 했음). 재설치 실측으로 치환 동작 확인. 크리덴셜 스캔 결과 없음. `.gitignore`에 runs/hook.log·pm_command.log 추가(런타임 로그는 사용자 프롬프트 포함 가능 — 커밋 금지)
+- **공개**: https://github.com/Createyouracccount/PromptMaker (public, main). 이후 라운드는 1문제=1커밋으로 푸시
+- **R8**: MIT LICENSE 추가 + pyproject license 필드 (공개 repo 라이선스 부재는 타인 사용 불가 문제)
+- **R9**: 패키징 버그 수정 — package-data가 `profiles/*.md`만 포함해 pip 설치본에서 concise 모드(훅 경로) 깨짐 → `profiles/condensed/*.md` 추가. **실측**: 깨끗한 venv에 pip 설치 → condensed 4종 포함·`build_meta_prompt(concise=True)` 동작·`promptmaker --version` 엔트리포인트 확인
+- **R10**: 백로그 해소 — CLI에 `--concise` 플래그 노출. **실측**: `--concise --json` E2E 정상 출력(intent=fix, 유효 JSON)
+- **다음 인수 지점**: 지속 루프 계속 — 남은 백로그: <10토큰 스킵 기준 재검토(게이트 연관— 사용자 승인 필요), 심판 루브릭 조사 지시 예외, README 신규 사용자 온보딩(영문 병기·요구사항), Phase 3 MCP 게이트 초안 승인 대기
+
 ## 2026-08-11 · R7 (메타프롬프트 축약으로 G2-3(c) 해소 — Phase 2 전 게이트 PASS)
 
 - **가설**: 미시도 레버였던 입력 크기 축소가 지연 병목일 것 (기존: 출력 상한·플래그는 효과 없음)
