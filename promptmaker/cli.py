@@ -12,7 +12,12 @@ import json
 import sys
 
 from . import __version__
-from .engine import DEFAULT_REWRITER_MODEL, MODEL_ALIASES, rewrite
+from .engine import (
+    DEFAULT_REWRITER_MODEL,
+    MODEL_ALIASES,
+    ClaudeCLINotFoundError,
+    rewrite,
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -41,7 +46,11 @@ def main(argv: list[str] | None = None) -> int:
     if not raw.strip():
         parser.error("빈 프롬프트입니다.")
 
-    result = rewrite(raw, args.model, rewriter_model=args.rewriter_model, concise=args.concise)
+    try:
+        result = rewrite(raw, args.model, rewriter_model=args.rewriter_model, concise=args.concise)
+    except ClaudeCLINotFoundError as e:
+        print(f"오류: {e}", file=sys.stderr)
+        return 1
 
     if args.json:
         print(json.dumps({

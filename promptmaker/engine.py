@@ -32,6 +32,10 @@ MODEL_ALIASES = {
 
 DEFAULT_REWRITER_MODEL = "claude-haiku-4-5"
 
+
+class ClaudeCLINotFoundError(Exception):
+    """The `claude` binary is not on PATH. Not retryable — fail fast with guidance."""
+
 META_PROMPT_TEMPLATE = """\
 당신은 Claude Code 사용자를 위한 프롬프트 재작성 엔진이다. 사용자가 대충 쓴 요청(RAW)을 \
 대상 모델({target_model})에 가장 잘 맞는 프롬프트로 재작성한다.
@@ -117,14 +121,20 @@ def build_meta_prompt(raw_prompt: str, target_model: str, concise: bool = False)
 def call_claude(prompt: str, model: str, timeout: int = 180) -> str:
     # --strict-mcp-config + empty config: skip loading the user's MCP servers.
     # The rewriter needs no tools; this cut measured latency 32.0s -> 25.5s.
-    proc = subprocess.run(
-        ["claude", "-p", "--model", model,
-         "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}'],
-        input=prompt,
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-    )
+    try:
+        proc = subprocess.run(
+            ["claude", "-p", "--model", model,
+             "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}'],
+            input=prompt,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except FileNotFoundError:
+        raise ClaudeCLINotFoundError(
+            "`claude` CLI를 찾을 수 없습니다. Claude Code를 설치하고 로그인하세요: "
+            "https://claude.com/claude-code"
+        ) from None
     if proc.returncode != 0:
         raise RuntimeError(f"claude -p failed (rc={proc.returncode}): {proc.stderr[:500]}")
     return proc.stdout.strip()

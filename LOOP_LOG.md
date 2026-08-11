@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-08-12 · R12 (claude CLI 미설치 시 친절한 에러)
+
+- **발굴**: `claude` 바이너리가 PATH에 없으면 FileNotFoundError 원시 트레이스백 노출 — 재시도 루프도 못 잡는 예외라 신규 사용자가 원인(설치·로그인)을 알 수 없음
+- **완료**: `ClaudeCLINotFoundError`(비재시도, Exception 직속 — retry except 절 비포획) 신설, call_claude에서 FileNotFoundError 변환, CLI에서 한 줄 안내 + rc=1
+- **실측**: `env PATH=/usr/bin:/bin python3 -m promptmaker.cli "..."` → 트레이스백 없이 "오류: `claude` CLI를 찾을 수 없습니다..." + rc=1. 훅 경로는 기존 fail-open이 전 예외 포획이라 영향 없음
+- **다음 인수 지점**: 백로그 계속 — 심판 루브릭 조사 지시 예외 명문화, 스킵 기준(사용자 승인 대기), Phase 3 MCP 초안 승인 대기
+
 ## 2026-08-12 · R11 (README 온보딩 — clone→pip install 경로)
 
 - **발굴**: README 사용법이 연구 폴더 내부 실행 기준 — GitHub 방문자의 clone→설치→실행 경로 부재
