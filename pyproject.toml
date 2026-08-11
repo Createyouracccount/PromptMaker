@@ -17,4 +17,4 @@ build-backend = "setuptools.build_meta"
 include = ["promptmaker*"]
 
 [tool.setuptools.package-data]
-promptmaker = ["profiles/*.md"]
+promptmaker = ["profiles/*.md", "profiles/condensed/*.md"]
