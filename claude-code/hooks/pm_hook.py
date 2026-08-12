@@ -8,7 +8,8 @@ additionalContext (the hook API cannot replace the prompt itself).
 Skip conditions (no intervention, exit 0 with no output):
   - prompt starts with "/" (slash command)
   - prompt contains "#raw" (explicit opt-out tag)
-  - prompt too short (< 10 estimated tokens) — greetings, short commands
+  - prompt too short (< 6 estimated tokens) — greetings, short commands
+    (was < 10; lowered per user-approved gate amendment, GATES.md 2026-08-12)
   - prompt already detailed (> 800 chars) — user wrote a real prompt
 Fail-open: any internal error -> no output, logged to runs/hook.log.
 """
@@ -53,7 +54,7 @@ def should_skip(prompt: str) -> str | None:
         return "slash-command"
     if re.search(r"(?:^|\s)#raw\b", p):
         return "raw-tag"
-    if estimate_tokens(p) < 10:
+    if estimate_tokens(p) < 6:
         return "too-short"
     if len(p) > 800:
         return "already-detailed"

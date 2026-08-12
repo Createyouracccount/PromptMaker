@@ -198,6 +198,11 @@ class TestHookSkipRules(unittest.TestCase):
         self.assertEqual(pm_hook.should_skip("짧음"), "too-short")
         self.assertEqual(pm_hook.should_skip("hi there"), "too-short")
 
+    def test_seven_token_target_prompt_not_skipped(self):
+        # "배포 자동화 하고싶어 도와줘" = ~7 tokens; was skipped under the old
+        # <10 threshold — must pass through after the approved amendment (<6).
+        self.assertIsNone(pm_hook.should_skip("배포 자동화 하고싶어 도와줘"))
+
     def test_already_detailed(self):
         self.assertEqual(pm_hook.should_skip("가" * 801), "already-detailed")
 
