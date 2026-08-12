@@ -5,6 +5,16 @@
 
 ---
 
+## 2026-08-12 · R19~R20 (사용자 승인 반영: 스킵 기준 완화 + Phase 3 MCP 서버 — 게이트 3/3 PASS)
+
+- **사용자 승인 (4건)**: ① Phase 3 착수 ② 스킵 기준 <10→<6토큰 ③ PyPI 배포 ④ Windows는 "미검증 명시 유지". GATES.md에 개정 이력 2건 기록(동결 규칙 준수 — 사용자 승인으로만 변경)
+- **R19 (스킵 기준)**: pm_hook <6토큰 적용. **실측**: "배포 자동화 하고싶어 도와줘"(7토큰) 훅 E2E → 17.2s 재작성 성공(구 기준에선 스킵되던 케이스), 회귀 테스트 추가 28/28 OK
+- **R20 (MCP 서버, G3-1~3)**: promptmaker/mcp_server.py — stdio 개행 구분 JSON-RPC 2.0, 의존성 0, initialize/tools/list/tools/call/ping. `promptmaker-mcp` 엔트리포인트(깨끗한 venv 실측). 프로토콜 오프라인 테스트 6건 포함 34/34 OK
+- **실측 증거**: runs/mcp_g31_roundtrip.txt(3왕복 원문, tools/call 실호출 포함) / runs/mcp_g32_claude_client.txt(독립 클라이언트 claude -p가 서버 스폰·호출, fable-5 산문 재작성 수신)
+- **심판 판정 (fresh-context, 반증 프레이밍, 직접 재실행 포함)**: **G3-1 PASS / G3-2 PASS / G3-3 PASS — Phase 3 게이트 3/3.** 심판이 프로토콜 왕복·독립 클라이언트 호출·테스트 34건을 직접 재실행해 확인
+- **심판 부기 → 조치**: ① R19·R20 원장 기록(본 항목) ② README 상태 갱신(같은 커밋) ③ [의무] 향후 MCP 클라이언트 증거는 --output-format stream-json으로 도구 호출 트랜스크립트까지 캡처 ④ [경미·기록만] initialize가 클라이언트 protocolVersion 에코 — 엄밀한 버전 협상 아님
+- **다음 인수 지점**: PyPI 배포(승인됨, 자격증명 확인 필요), Cursor 실기기 검증(사용자 확인 항목), Phase 4(사용 데이터 기반 개선)
+
 ## 2026-08-12 · R18 (설치 화면 사용자 언어화 + 플랫폼 명시 — 루프 종료 라운드)
 
 - **발굴**: install.sh 출력이 내부 연구 용어(G2-3·심판 3차·LOOP_LOG R7)를 신규 설치자에게 노출, README에 플랫폼·Python 요구사항 불명

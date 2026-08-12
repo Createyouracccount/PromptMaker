@@ -67,5 +67,6 @@ Claude Code 안에서: `/pm 대충 쓴 요청` → 현재 모델에 맞게 재�
 - **Phase 0 (조사·기획): 완료** — 2026-08-11
 - **Phase 1 (MVP): 완료** — 2026-08-11. 골든셋 20/20 "better", 프로필 간 차이 5/5 입증 ([EVAL.md](EVAL.md))
 - **Phase 2 (Claude Code 통합): 완료 — 게이트 5/5 PASS** — 2026-08-11. /pm 커맨드 + 훅 자동 모드(축약 메타로 재작성 ~15-19s) 모두 심판 검증 통과 ([LOOP_LOG.md](LOOP_LOG.md) R7)
+- **Phase 3 (MCP 서버): 완료 — 게이트 3/3 PASS** — 2026-08-12. `refine_prompt` MCP 서버(stdio, 의존성 0) + 독립 클라이언트 실측 ([LOOP_LOG.md](LOOP_LOG.md) R19~R20). Cursor 실기기 검증은 사용자 확인 대기
 - 개선 루프 인프라: [GATES.md](GATES.md)(동결 기준) + [LOOP_LOG.md](LOOP_LOG.md)(원장) + [PROMPT.md](PROMPT.md)(세션 재개 블록)
-- 다음: Phase 3 (MCP 서버로 Cursor 지원) — 게이트 초안 사용자 승인 대기, PLAN.md 참고
+- 다음: Phase 4 (사용 데이터 기반 개선), PLAN.md 참고

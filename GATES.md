@@ -28,14 +28,14 @@
   Phase 2 판정 이력은 구 기준으로 유효 — 재판정하지 않는다.
 - 2026-08-12 사용자 승인: Phase 3 게이트 신설 (아래).
 
-## Phase 3 게이트 (승인 2026-08-12, 판정 대기)
+## Phase 3 게이트 (승인 2026-08-12, 판정 완료 2026-08-12 ✅ — 심판 1차 3/3 PASS)
 
-- [ ] **G3-1 MCP 서버**: `refine_prompt(raw, target_model, concise)` 도구를 노출하는 MCP 서버(stdio)를
+- [x] **G3-1 MCP 서버**: `refine_prompt(raw, target_model, concise)` 도구를 노출하는 MCP 서버(stdio)를
   코어 엔진 재사용으로 구현. 증거: initialize → tools/list → tools/call 프로토콜 왕복 원문 캡처.
-- [ ] **G3-2 독립 MCP 클라이언트 검증**: PromptMaker 코드가 아닌 독립 MCP 클라이언트가 서버를 스폰해
+- [x] **G3-2 독립 MCP 클라이언트 검증**: PromptMaker 코드가 아닌 독립 MCP 클라이언트가 서버를 스폰해
   refine_prompt를 호출하고 유효한 재작성 결과를 받음을 실측. 증거: 클라이언트 호출 로그 원문.
   (Cursor 실기기 검증은 사용자 확인 항목으로 별도 기록 — 게이트는 프로토콜 준수 실측으로 판정)
-- [ ] **G3-3 문서화·백로그**: README에 MCP 등록 방법 기재(Cursor·Claude Code 예시), 스킵 기준 개정
+- [x] **G3-3 문서화·백로그**: README에 MCP 등록 방법 기재(Cursor·Claude Code 예시), 스킵 기준 개정
   반영, LOOP_LOG 원장 기록.
 
 ## Phase 3 성공 선언 조건
