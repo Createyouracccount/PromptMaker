@@ -210,6 +210,44 @@ class TestHookSkipRules(unittest.TestCase):
         self.assertIsNone(pm_hook.should_skip("로그인 버그 고쳐줘 재현 방법은 잘 모르겠는데 자꾸 세션이 끊겨"))
 
 
+class TestMcpServerProtocol(unittest.TestCase):
+    """Protocol-level tests — no LLM calls (tools/call with empty raw only)."""
+
+    def _req(self, method, params=None, req_id=1):
+        from promptmaker.mcp_server import handle_request
+        return handle_request({"jsonrpc": "2.0", "id": req_id, "method": method,
+                               "params": params or {}})
+
+    def test_initialize(self):
+        resp = self._req("initialize", {"protocolVersion": "2025-06-18"})
+        self.assertEqual(resp["result"]["serverInfo"]["name"], "promptmaker")
+        self.assertIn("tools", resp["result"]["capabilities"])
+
+    def test_tools_list(self):
+        resp = self._req("tools/list")
+        tools = resp["result"]["tools"]
+        self.assertEqual(len(tools), 1)
+        self.assertEqual(tools[0]["name"], "refine_prompt")
+        self.assertIn("raw", tools[0]["inputSchema"]["required"])
+
+    def test_notification_returns_none(self):
+        from promptmaker.mcp_server import handle_request
+        self.assertIsNone(handle_request({"jsonrpc": "2.0",
+                                          "method": "notifications/initialized"}))
+
+    def test_unknown_method_errors(self):
+        resp = self._req("resources/list")
+        self.assertEqual(resp["error"]["code"], -32601)
+
+    def test_unknown_tool_errors(self):
+        resp = self._req("tools/call", {"name": "nope", "arguments": {}})
+        self.assertEqual(resp["error"]["code"], -32602)
+
+    def test_empty_raw_is_tool_error(self):
+        resp = self._req("tools/call", {"name": "refine_prompt", "arguments": {"raw": " "}})
+        self.assertTrue(resp["result"]["isError"])
+
+
 class TestEstimateTokens(unittest.TestCase):
     def test_korean_uses_half_chars(self):
         text = "가나다라마바사아자차"  # 10 Korean chars -> ~5 tokens

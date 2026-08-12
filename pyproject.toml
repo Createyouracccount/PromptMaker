@@ -8,6 +8,7 @@ dependencies = []
 
 [project.scripts]
 promptmaker = "promptmaker.cli:main"
+promptmaker-mcp = "promptmaker.mcp_server:main"
 
 [build-system]
 requires = ["setuptools>=68"]

@@ -42,6 +42,21 @@ python3 eval/run_eval.py                           # 골든셋 평가 (repo 안�
 python3 -m unittest discover tests                 # 오프라인 테스트 (LLM 호출 없음)
 ```
 
+### MCP 서버 (Cursor 등 Claude Code 밖에서)
+
+`refine_prompt(raw, target_model, concise)` 도구를 노출하는 MCP 서버가 내장되어 있습니다 (stdio, 의존성 없음).
+
+```jsonc
+// Cursor: ~/.cursor/mcp.json (pip install 후)
+{ "mcpServers": { "promptmaker": { "command": "promptmaker-mcp" } } }
+// pip 설치 없이 repo에서 직접: command "python3", args ["-m", "promptmaker.mcp_server"] (cwd: repo)
+```
+
+```bash
+# Claude Code에 등록
+claude mcp add promptmaker -- promptmaker-mcp
+```
+
 Claude Code 안에서: `/pm 대충 쓴 요청` → 현재 모델에 맞게 재작성 후 수행.
 훅 자동 모드: install.sh가 출력하는 settings 스니펫 참조. `#raw` 태그로 우회, 6토큰 미만·800자 초과는 자동 무개입.
 
