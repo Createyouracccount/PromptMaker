@@ -2,9 +2,15 @@
 name = "promptmaker"
 version = "0.1.0"
 description = "Model-aware prompt refinement tool for Claude Code users"
+readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.10"
 dependencies = []
+keywords = ["claude", "claude-code", "prompt", "prompt-engineering", "mcp"]
+
+[project.urls]
+Repository = "https://github.com/Createyouracccount/PromptMaker"
+Issues = "https://github.com/Createyouracccount/PromptMaker/issues"
 
 [project.scripts]
 promptmaker = "promptmaker.cli:main"
