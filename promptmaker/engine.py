@@ -36,9 +36,24 @@ DEFAULT_REWRITER_MODEL = "claude-haiku-4-5"
 class ClaudeCLINotFoundError(Exception):
     """The `claude` binary is not on PATH. Not retryable — fail fast with guidance."""
 
+# Intent-conditioned guidance: the rewriter classifies intent first, then the
+# matching block routes what the rewrite must pin down. Adopted after pairwise
+# eval vs the model-profile-only meta (LOOP_LOG R22).
+INTENT_RULES = """\
+- fix/debug: 증상·재현 경로·기대 동작을 먼저 파악하게 하고, 최소 수정 범위와 수정 후 검증 방법을 명시
+- build: 목표와 의도, 1차 범위(MVP) 경계, 완료 기준을 명시하고 범위 밖 항목은 제외임을 명시
+- research: 조사 대상과 산출물 형식(구조·분량)을 지정하고 코드 수정은 하지 않음을 명시
+- refactor: 동작 불변 조건과 테스트로 검증함을 명시하고 대상 범위를 한정
+- docs: 독자와 형식, 다루는 범위를 지정
+- general: 아래 공통·모델 규칙만 적용
+단, 의견·질문형 요청은 실행 과제로 변질시키지 말고 답변·평가 과제로 유지하라."""
+
 META_PROMPT_TEMPLATE = """\
 당신은 Claude Code 사용자를 위한 프롬프트 재작성 엔진이다. 사용자가 대충 쓴 요청(RAW)을 \
 대상 모델({target_model})에 가장 잘 맞는 프롬프트로 재작성한다.
+
+먼저 RAW의 intent를 분류하고(fix|build|research|debug|refactor|docs|general), 해당 유형 규칙을 적용하라:
+{intent_rules}
 
 <공통 규칙>
 {common_profile}
@@ -90,7 +105,10 @@ def load_profile(stem: str) -> str:
     return (PROFILES_DIR / f"{stem}.md").read_text(encoding="utf-8")
 
 
-CONDENSED_TEMPLATE = """\
+# Lean condensed (no intent block): for the hook path whose 28s cap leaves no
+# latency headroom — intent-routed meta pushed 2/6 A/B calls past 28s while the
+# lean meta stayed under (LOOP_LOG R22).
+CONDENSED_LEAN_TEMPLATE = """\
 당신은 프롬프트 재작성기다. RAW를 Claude {target_model}에 맞게 재작성하라.
 {target_model} 규칙: {condensed_profile}
 공통: RAW에 없는 사실을 지어내지 말 것 — 모르면 조사 지시로 바꾸고, 추가 세부에는 [가정: 이유] 필수. RAW 언어 유지. rewritten_prompt는 700자 이내.
@@ -100,20 +118,40 @@ CONDENSED_TEMPLATE = """\
 JSON만 출력: {{"intent": "fix|build|research|debug|refactor|docs|general", "rewritten_prompt": "...", "changes": ["1~3개, 각 한 문장"]}}
 """
 
+CONDENSED_TEMPLATE = """\
+당신은 프롬프트 재작성기다. RAW를 Claude {target_model}에 맞게 재작성하라.
+먼저 intent를 분류하고 해당 유형 규칙을 적용하라:
+{intent_rules}
+{target_model} 규칙: {condensed_profile}
+공통: RAW에 없는 사실을 지어내지 말 것 — 모르면 조사 지시로 바꾸고, 추가 세부에는 [가정: 이유] 필수. RAW 언어 유지. rewritten_prompt는 700자 이내.
+<RAW>
+{raw_prompt}
+</RAW>
+JSON만 출력: {{"intent": "fix|build|research|debug|refactor|docs|general", "rewritten_prompt": "...", "changes": ["1~3개, 각 한 문장"]}}
+"""
 
-def build_meta_prompt(raw_prompt: str, target_model: str, concise: bool = False) -> str:
+
+def build_meta_prompt(
+    raw_prompt: str, target_model: str, concise: bool = False, intent_routing: bool = True
+) -> str:
     stem = resolve_profile(target_model)
     if concise:
-        # Latency-critical paths (hook): 316-char meta measured max 21.9s vs
+        # Latency-critical paths (hook): small meta measured max 21.9s vs
         # full meta max 58.3s in the same window (LOOP_LOG R7).
         condensed = (PROFILES_DIR / "condensed" / f"{stem}.md").read_text(encoding="utf-8").strip()
+        if not intent_routing:
+            return CONDENSED_LEAN_TEMPLATE.format(
+                target_model=stem, condensed_profile=condensed, raw_prompt=raw_prompt.strip()
+            )
         return CONDENSED_TEMPLATE.format(
-            target_model=stem, condensed_profile=condensed, raw_prompt=raw_prompt.strip()
+            target_model=stem, condensed_profile=condensed,
+            intent_rules=INTENT_RULES, raw_prompt=raw_prompt.strip()
         )
     return META_PROMPT_TEMPLATE.format(
         target_model=stem,
         common_profile=load_profile("_common"),
         model_profile=load_profile(stem),
+        intent_rules=INTENT_RULES,
         raw_prompt=raw_prompt.strip(),
     )
 
@@ -158,8 +196,9 @@ def rewrite(
     retries: int = 2,
     timeout: int = 180,
     concise: bool = False,
+    intent_routing: bool = True,
 ) -> RewriteResult:
-    meta = build_meta_prompt(raw_prompt, target_model, concise=concise)
+    meta = build_meta_prompt(raw_prompt, target_model, concise=concise, intent_routing=intent_routing)
     last_err: Exception | None = None
     for _ in range(retries + 1):
         try:

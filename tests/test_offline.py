@@ -79,13 +79,28 @@ class TestBuildMetaPrompt(unittest.TestCase):
         concise = build_meta_prompt(raw, "fable-5", concise=True)
         self.assertIn(raw, concise)
         # Latency gate relies on the condensed meta staying small (LOOP_LOG R7).
-        self.assertLess(len(concise), 700)
+        # Bound raised 700->900 when intent routing rules were added (R22);
+        # hook E2E latency re-measured after the change.
+        self.assertLess(len(concise), 900)
         self.assertLess(len(concise), len(full) / 3)
 
     def test_concise_exists_for_all_profiles(self):
         for stem in ("fable-5", "opus-5", "sonnet-5", "haiku-4-5"):
             meta = build_meta_prompt("x" * 20, stem, concise=True)
             self.assertIn(stem, meta)
+
+    def test_lean_concise_has_no_intent_block_and_stays_small(self):
+        raw = "로그인 버그 고쳐줘"
+        lean = build_meta_prompt(raw, "fable-5", concise=True, intent_routing=False)
+        routed = build_meta_prompt(raw, "fable-5", concise=True)
+        self.assertNotIn("fix/debug:", lean)
+        self.assertIn("fix/debug:", routed)
+        # hook latency budget depends on the lean meta staying small (R7, R22)
+        self.assertLess(len(lean), 500)
+
+    def test_full_meta_includes_intent_rules(self):
+        meta = build_meta_prompt("로그인 버그 고쳐줘", "fable-5")
+        self.assertIn("fix/debug:", meta)
 
 
 class TestRewriteRetry(unittest.TestCase):

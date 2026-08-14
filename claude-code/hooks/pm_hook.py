@@ -87,7 +87,9 @@ def main() -> int:
         from promptmaker.engine import rewrite
 
         target = detect_model(hook_input) or DEFAULT_TARGET
-        result = rewrite(prompt, target, retries=0, timeout=28, concise=True)  # gate: 30s
+        # gate: 30s. intent_routing=False — the intent block pushed 2/6 calls
+        # past the 28s cap in A/B; the hook keeps the lean meta (LOOP_LOG R22).
+        result = rewrite(prompt, target, retries=0, timeout=28, concise=True, intent_routing=False)
         context = (
             "[PromptMaker] 사용자의 요청을 대상 모델에 맞게 재해석했다. "
             "원문 의도를 유지하되 아래 재작성을 작업 지침으로 삼아라. "
