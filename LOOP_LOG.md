@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-08-15 · R30 (PromptTailor 전면 리브랜딩 — PyPI 이름 차단 대응)
+
+- **배경**: PyPI가 `promptmaker`를 기존 `prompt-maker`와 혼동 유사(구분자 차이)로 차단. 이름 심사(후보 26종 가용성 전수 확인, 유사 변형 포함) → 사용자 승인으로 **prompt-tailor** 확정 — "모델에 맞춰 재단"이라는 차별점을 이름이 직접 전달
+- **개명 범위(전면)**: Python 패키지 `promptmaker`→`prompt_tailor`, CLI `prompt-tailor`, MCP `prompt-tailor-mcp`(serverInfo 동일), 환경변수 `PROMPT_TAILOR_ACTIVE`, 플러그인·마켓플레이스 `prompt-tailor`, 훅 컨텍스트 태그 `[PromptTailor]`, installer placeholder `__PROMPT_TAILOR_ROOT__`, README 영/한, GitHub repo `PromptTailor`(구 URL 자동 리다이렉트), 로컬 폴더, 사용자 설정(allow 규칙·설치본 pm.md). `/pm` 커맨드명·`refine_prompt` 도구명은 유지. 역사 기록(원장 과거 항목·실험 결과 JSON)은 위조 방지 위해 미수정
+- **실측 재검증**: 오프라인 테스트 37/37 OK / 새 이름 빌드+twine check PASSED / 깨끗한 venv 설치 → `prompt-tailor`·`prompt-tailor-mcp` 동작 / 격리 CLAUDE_CONFIG_DIR에서 플러그인 marketplace add→install 성공 / 개명된 경로에서 훅 E2E 성공(`[PromptTailor]` 태그) / CI green(개명 커밋)
+- **릴리스**: v0.1.0 노트를 새 이름으로 갱신(개명 사유 명기)
+- **다음 인수 지점**: PyPI pending publisher에 `prompt-tailor` 등록(사용자) → publish.yml 추가 → 자동 배포. 이후 pip 이름은 prompt-tailor
+
 ## 2026-08-15 · R27~R29 (배포 라운드: 영문화 + 플러그인화 + CI·릴리스)
 
 - **R27 (README)**: 영어 입력 경로 첫 검증 — "fix the login bug asap..." → 영어 산문 재작성, fable 프로필·조사 지시·범위 경계 정상(이 실측 출력을 README 예시로 사용). README.md 영문 재작성(before/after 예시·검증 근거·정직한 한계 포함), README.ko.md 분리
