@@ -59,6 +59,7 @@ def _handle_tool_call(arguments: dict) -> dict:
             concise=bool(arguments.get("concise", True)),
         )
         payload = {
+            "action": r.action,
             "intent": r.intent,
             "target_model": r.target_model,
             "rewritten_prompt": r.rewritten_prompt,

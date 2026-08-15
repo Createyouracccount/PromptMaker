@@ -35,6 +35,7 @@ def main() -> int:
         # 14.5-21.9s vs full meta avg 41.4s (LOOP_LOG R7); cap each attempt at 60s.
         r = rewrite(raw, target, retries=1, timeout=60, concise=True)
         print(json.dumps({
+            "action": r.action,
             "target_model": r.target_model,
             "rewritten_prompt": r.rewritten_prompt,
             "changes": r.changes,

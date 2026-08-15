@@ -100,7 +100,7 @@ Every claim is backed by ledgered experiments (blind pairwise LLM judging; [LOOP
 - Model profiles produce structurally different rewrites: 5/5; intent routing beat profile-only meta 4–1–1
 - **Task outcome pilot (n=3): the raw prompt won 3–0.** On *already-clear, self-contained* codegen tasks run headless, rewriting hurt: it inflated scope, its investigation directives stalled a run, and its verification demands made the executor fabricate test results — [eval/ab_task_outcome_results.json](eval/ab_task_outcome_results.json)
 
-**What this means**: the measured benefit is on vague, underspecified requests — the golden set's territory. If your request is already specific, the rewrite is at best overhead and at worst harmful; use `#raw` (hook) or just don't invoke `/pm`. An automatic "already clear → don't touch" gate is the top item on the roadmap.
+**What this means**: the measured benefit is on vague, underspecified requests — the golden set's territory. Already-clear requests should be left alone, so since v0.2.0 the rewriter runs a **clarity gate** first: if your request is already specific it returns it untouched (`action: keep`; the hook then injects nothing). Gate accuracy on a balanced 40-prompt benchmark: **39/40 (98%)** — vague recall 20/20, clear recall 19/20. Dataset, runner, and the one miss are documented in [BENCHMARK.md](BENCHMARK.md).
 
 ## What we do NOT guarantee
 

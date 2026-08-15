@@ -90,6 +90,10 @@ def main() -> int:
         # gate: 30s. intent_routing=False — the intent block pushed 2/6 calls
         # past the 28s cap in A/B; the hook keeps the lean meta (LOOP_LOG R22).
         result = rewrite(prompt, target, retries=0, timeout=28, concise=True, intent_routing=False)
+        if result.action == "keep":
+            # already-clear prompt: no injection, no token overhead
+            log(f"skip (already-clear, {time.time() - t0:.1f}s): {prompt[:60]!r}")
+            return 0
         context = (
             "[PromptTailor] 사용자의 요청을 대상 모델에 맞게 재해석했다. "
             "원문 의도를 유지하되 아래 재작성을 작업 지침으로 삼아라. "

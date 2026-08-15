@@ -52,7 +52,11 @@ META_PROMPT_TEMPLATE = """\
 당신은 Claude Code 사용자를 위한 프롬프트 재작성 엔진이다. 사용자가 대충 쓴 요청(RAW)을 \
 대상 모델({target_model})에 가장 잘 맞는 프롬프트로 재작성한다.
 
-먼저 RAW의 intent를 분류하고(fix|build|research|debug|refactor|docs|general), 해당 유형 규칙을 적용하라:
+0단계 — 재작성 필요 판정: RAW가 이미 대상·목표·결과물이 구체적이어서 그대로 실행해도 되는 요청이면
+(예: "X 파일의 Y를 Z로 바꿔줘", "퀵정렬 함수 짜줘"), action을 "keep"으로 하고 rewritten_prompt에 RAW를
+그대로 넣어라. 재작성은 모호하거나 범위·완료 기준이 불명확한 요청에만 한다 — 명확한 요청을 부풀리는 것은 실패다.
+
+재작성하는 경우: RAW의 intent를 분류하고(fix|build|research|debug|refactor|docs|general), 해당 유형 규칙을 적용하라:
 {intent_rules}
 
 <공통 규칙>
@@ -77,9 +81,10 @@ META_PROMPT_TEMPLATE = """\
 
 아래 JSON만 출력하라 (다른 텍스트 금지):
 {{
+  "action": "rewrite 또는 keep",
   "intent": "fix|build|research|debug|refactor|docs|general 중 하나",
-  "rewritten_prompt": "재작성된 프롬프트 전문",
-  "changes": ["무엇을 왜 바꿨는지 1~3개, 각 한 문장"]
+  "rewritten_prompt": "재작성된 프롬프트 전문 (keep이면 RAW 그대로)",
+  "changes": ["무엇을 왜 바꿨는지 1~3개, 각 한 문장 (keep이면 빈 배열)"]
 }}
 """
 
@@ -91,6 +96,7 @@ class RewriteResult:
     changes: list[str]
     target_model: str
     raw_prompt: str
+    action: str = "rewrite"  # "keep" = RAW already clear, left untouched
 
 
 def resolve_profile(target_model: str) -> str:
@@ -110,24 +116,26 @@ def load_profile(stem: str) -> str:
 # lean meta stayed under (LOOP_LOG R22).
 CONDENSED_LEAN_TEMPLATE = """\
 당신은 프롬프트 재작성기다. RAW를 Claude {target_model}에 맞게 재작성하라.
+RAW가 이미 대상·목표·결과물이 구체적이면 action="keep", rewritten_prompt=RAW 그대로 — 명확한 요청을 부풀리지 마라. 모호할 때만 action="rewrite".
 {target_model} 규칙: {condensed_profile}
 공통: RAW에 없는 사실을 지어내지 말 것 — 모르면 조사 지시로 바꾸고, 추가 세부에는 [가정: 이유] 필수. RAW 언어 유지. rewritten_prompt는 700자 이내.
 <RAW>
 {raw_prompt}
 </RAW>
-JSON만 출력: {{"intent": "fix|build|research|debug|refactor|docs|general", "rewritten_prompt": "...", "changes": ["1~3개, 각 한 문장"]}}
+JSON만 출력: {{"action": "rewrite|keep", "intent": "fix|build|research|debug|refactor|docs|general", "rewritten_prompt": "...", "changes": ["1~3개, 각 한 문장"]}}
 """
 
 CONDENSED_TEMPLATE = """\
 당신은 프롬프트 재작성기다. RAW를 Claude {target_model}에 맞게 재작성하라.
-먼저 intent를 분류하고 해당 유형 규칙을 적용하라:
+0단계: RAW가 이미 대상·목표·결과물이 구체적이면 action="keep", rewritten_prompt=RAW 그대로 — 명확한 요청을 부풀리지 마라. 모호할 때만 action="rewrite".
+재작성 시 intent를 분류하고 해당 유형 규칙을 적용하라:
 {intent_rules}
 {target_model} 규칙: {condensed_profile}
 공통: RAW에 없는 사실을 지어내지 말 것 — 모르면 조사 지시로 바꾸고, 추가 세부에는 [가정: 이유] 필수. RAW 언어 유지. rewritten_prompt는 700자 이내.
 <RAW>
 {raw_prompt}
 </RAW>
-JSON만 출력: {{"intent": "fix|build|research|debug|refactor|docs|general", "rewritten_prompt": "...", "changes": ["1~3개, 각 한 문장"]}}
+JSON만 출력: {{"action": "rewrite|keep", "intent": "fix|build|research|debug|refactor|docs|general", "rewritten_prompt": "...", "changes": ["1~3개, 각 한 문장"]}}
 """
 
 
@@ -209,10 +217,15 @@ def rewrite(
             last_err = e
     else:
         raise RuntimeError(f"rewrite failed after {retries + 1} attempts: {last_err}")
+    action = str(data.get("action", "rewrite")).strip().lower()
+    if action not in ("rewrite", "keep"):
+        action = "rewrite"
     return RewriteResult(
         intent=str(data.get("intent", "general")),
-        rewritten_prompt=str(data["rewritten_prompt"]),
-        changes=[str(c) for c in data.get("changes", [])],
+        # on "keep" the raw prompt is authoritative regardless of model output
+        rewritten_prompt=raw_prompt if action == "keep" else str(data["rewritten_prompt"]),
+        changes=[str(c) for c in data.get("changes", [])] if action == "rewrite" else [],
         target_model=resolve_profile(target_model),
         raw_prompt=raw_prompt,
+        action=action,
     )
