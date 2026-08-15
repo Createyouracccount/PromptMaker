@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-08-15 · R27~R29 (배포 라운드: 영문화 + 플러그인화 + CI·릴리스)
+
+- **R27 (README)**: 영어 입력 경로 첫 검증 — "fix the login bug asap..." → 영어 산문 재작성, fable 프로필·조사 지시·범위 경계 정상(이 실측 출력을 README 예시로 사용). README.md 영문 재작성(before/after 예시·검증 근거·정직한 한계 포함), README.ko.md 분리
+- **R28 (플러그인)**: `.claude-plugin/plugin.json` + 자체 marketplace.json + `commands/pm.md`(`${CLAUDE_PLUGIN_ROOT}` — 경로 하드코딩 구조적 해소). **실측**: 격리 CLAUDE_CONFIG_DIR에서 marketplace add → install 성공, 인벤토리 스킬 1(pm)·상시 ~13토큰, 플러그인 캐시에서 백엔드 실행 정상(격리 환경 실패 1건은 자식 claude -p가 로그인 없는 격리 설정을 상속한 테스트 아티팩트로 판명). 설치는 이제 2줄: `/plugin marketplace add Createyouracccount/PromptMaker` → `/plugin install promptmaker@promptmaker`
+- **R29 (CI·릴리스)**: GitHub Actions(py3.10·3.12, unittest 37건+build+twine check) **green** — Ubuntu 통과로 Linux 호환 실증. v0.1.0 태그 + GitHub Release 발행
+- **잔존**: PyPI 업로드(토큰 대기), Cursor 실기기(사용자 확인), legacy claude-code/commands/pm.md와 플러그인 commands/pm.md 이중 관리(플러그인 정착 시 legacy 제거 검토)
+- **다음 인수 지점**: 사용자 플러그인 설치 전환 시 기존 ~/.claude/commands/pm.md와 /pm 이름 충돌 주의(수동 설치본 제거 권장). Phase 4 실사용 데이터 수집
+
 ## 2026-08-15 · R26 (실사용 발견: auto 모드 분류기 오탐 차단)
 
 - **관측(사용자)**: `/pm docker prune 시작해서...` → "Permission denied by the auto mode classifier". 원인: `!` 확장이 사용자 프롬프트를 명령줄 인자로 포함 → 분류기가 인자 속 "docker prune·정리" 문구를 위험 명령으로 오분류. 실제 실행되는 것은 텍스트 재작성 파이썬 스크립트뿐(구조적 오탐)
