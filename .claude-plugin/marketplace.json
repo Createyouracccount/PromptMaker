@@ -1,0 +1,14 @@
+{
+  "name": "promptmaker",
+  "owner": {
+    "name": "Createyouracccount",
+    "url": "https://github.com/Createyouracccount/PromptMaker"
+  },
+  "plugins": [
+    {
+      "name": "promptmaker",
+      "source": "./",
+      "description": "Model-aware prompt rewriting: /pm rewrites a rough request for the Claude model you are running, routed by task intent."
+    }
+  ]
+}
