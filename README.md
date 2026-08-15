@@ -58,6 +58,8 @@ claude mcp add promptmaker -- promptmaker-mcp
 ```
 
 Claude Code 안에서: `/pm 대충 쓴 요청` → 현재 모델에 맞게 재작성 후 수행.
+auto 모드에서 프롬프트에 위험해 보이는 단어가 있으면 분류기가 /pm 백엔드를 오탐 차단할 수 있음 —
+install.sh가 안내하는 permissions.allow 규칙을 추가하면 해결 (백엔드는 텍스트 재작성만 수행).
 훅 자동 모드: install.sh가 출력하는 settings 스니펫 참조. `#raw` 태그로 우회, 6토큰 미만·800자 초과는 자동 무개입.
 
 요구사항: Python 3.10+, `claude` CLI 설치·로그인 (별도 API 키 불필요). macOS/Linux 검증됨, Windows 미검증.
