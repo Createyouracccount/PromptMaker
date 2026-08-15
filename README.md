@@ -1,74 +1,99 @@
 # PromptMaker
 
-> 프롬프트 작성에 어려움을 겪는 사람들을 돕는 도구.
-> 사용자가 하고 싶은 말을 대충 적으면, **현재 선택된 모델에 가장 어울리는 형태로** 프롬프트를 다듬어주는 프로그램.
+> Model-aware prompt rewriting for Claude Code. Write a rough request — get it rewritten the way your current Claude model works best.
 
-## 한 줄 정의
+[한국어 README](README.ko.md)
 
-**입력**: 사용자의 날것 그대로의 요청(raw prompt) + 대상 모델(예: Fable 5, Opus 5) + 프로젝트 컨텍스트
-**출력**: 해당 모델의 프롬프팅 특성에 맞게 재작성된 프롬프트
+## Why
 
-## 핵심 원칙
+Claude Fable 5, Opus 5, Sonnet 5, and Haiku respond best to *different* prompt styles — Fable wants goals and constraints in prose (no step lists), Opus over-verifies if you tell it to double-check, Haiku wants small numbered steps. PromptMaker keeps these differences as data ([model profiles](promptmaker/profiles/)), detects which model you're running, and rewrites your rough request to match — also routing by task intent (fix / build / research / refactor / docs).
 
-1. **모델별 맞춤(model-aware)** — Fable 5, Opus 5, Sonnet 5, Haiku는 각각 잘 반응하는 프롬프트 스타일이 다르다. 모델 프로필을 데이터로 관리하고, 선택된 모델에 맞춰 재작성한다. ← 기존 도구들이 안 하는 우리의 차별점.
-2. **클라이언트 무관(client-agnostic)** — VSCode 확장, CMD(CLI), Cursor 등 어디서 쓰든 동일하게 동작. 코어 엔진 하나 + 배포 어댑터 여러 개 구조로 해결.
-3. **문서 주도 진행** — 확인된 사실은 이 폴더에 즉시 기록하고, 다음 계획은 기록 위에서 세운다.
+Your input language is preserved: English in → English out, Korean in → Korean out.
 
-## 문서 구조
+## Example
 
-| 파일 | 내용 |
-|---|---|
-| [RESEARCH.md](RESEARCH.md) | 기존 유사 프로젝트 조사·벤치마킹 결과 (2026-08-11) |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | 시스템 설계, 기술적 제약, 설계 결정 |
-| [PLAN.md](PLAN.md) | 단계별 로드맵과 각 단계의 완료 기준 |
-| [LOG.md](LOG.md) | 진행 원장 — 날짜별 확인 사실·결정·다음 할 일 |
+```
+$ promptmaker "fix the login bug asap, users keep getting logged out" --model fable-5
+```
 
-## 설치 (Quick Start)
+> Users are repeatedly logging out unexpectedly. Before fixing, investigate: exact
+> reproduction steps (when and under what conditions does this happen?), when this
+> started, relevant error logs or console messages, and the login/session management
+> code structure.
+>
+> Once you've identified the reproduction path and root cause, apply the minimum fix
+> to prevent unintended logouts. Scope: session and login logic only — do not modify
+> other features.
+>
+> Validation: confirm the issue no longer reproduces through direct testing, or verify
+> that related tests pass.
+
+Notice what happened: vague urgency ("asap") became an investigation directive, a scope boundary, and a validation criterion — and nothing was invented. Unknowns become investigation steps; any added specifics are tagged as assumptions.
+
+## Install
+
+**As a Claude Code plugin (recommended):**
+
+```
+/plugin marketplace add Createyouracccount/PromptMaker
+/plugin install promptmaker@promptmaker
+```
+
+This gives you the `/pm` command with no path setup.
+
+**As a CLI / MCP server:**
 
 ```bash
 git clone https://github.com/Createyouracccount/PromptMaker.git
 cd PromptMaker
-pip install .                    # promptmaker CLI 설치
-bash claude-code/install.sh      # /pm 슬래시 커맨드 설치 (Claude Code용, 선택)
+pip install .            # installs `promptmaker` and `promptmaker-mcp`
 ```
 
-## 사용법
+Requirements: Python 3.10+, the `claude` CLI installed and logged in (no separate API key). Verified on macOS/Linux; Windows untested.
+
+## Usage
 
 ```bash
-promptmaker "대충 쓴 요청" --model fable-5          # 재작성 결과 출력
-promptmaker "요청" --model haiku-4-5 --json        # JSON 출력
-promptmaker "요청" --concise                       # 축약 메타프롬프트 (빠름, 훅과 동일 경로)
-python3 eval/run_eval.py                           # 골든셋 평가 (repo 안에서)
-python3 -m unittest discover tests                 # 오프라인 테스트 (LLM 호출 없음)
+promptmaker "rough request" --model fable-5    # rewrite for a target model
+promptmaker "rough request" --json             # JSON output
+promptmaker "rough request" --concise          # faster, condensed meta-prompt
 ```
 
-### MCP 서버 (Cursor 등 Claude Code 밖에서)
+**Inside Claude Code** — `/pm rough request`: rewrites for your session's detected model, shows a one-line change summary, then executes the rewritten request. In auto mode, add the permission rule printed by `claude-code/install.sh` so prompts containing risky-looking words (e.g. "docker prune") aren't false-positive blocked — the backend only rewrites text.
 
-`refine_prompt(raw, target_model, concise)` 도구를 노출하는 MCP 서버가 내장되어 있습니다 (stdio, 의존성 없음).
+**Hook auto mode (opt-in)** — rewrite every prompt automatically via a `UserPromptSubmit` hook. Run `bash claude-code/install.sh` for the settings snippet. Escape hatch: include `#raw` in a prompt to pass it through untouched. Prompts under 6 tokens or over 800 chars are skipped; if a rewrite doesn't finish within 28s it fails open (your original prompt goes through).
+
+**Cursor / any MCP client** — a built-in stdio MCP server exposes `refine_prompt(raw, target_model, concise)`:
 
 ```jsonc
-// Cursor: ~/.cursor/mcp.json (pip install 후)
+// ~/.cursor/mcp.json
 { "mcpServers": { "promptmaker": { "command": "promptmaker-mcp" } } }
-// pip 설치 없이 repo에서 직접: command "python3", args ["-m", "promptmaker.mcp_server"] (cwd: repo)
 ```
 
 ```bash
-# Claude Code에 등록
-claude mcp add promptmaker -- promptmaker-mcp
+claude mcp add promptmaker -- promptmaker-mcp   # register in Claude Code
 ```
 
-Claude Code 안에서: `/pm 대충 쓴 요청` → 현재 모델에 맞게 재작성 후 수행.
-auto 모드에서 프롬프트에 위험해 보이는 단어가 있으면 분류기가 /pm 백엔드를 오탐 차단할 수 있음 —
-install.sh가 안내하는 permissions.allow 규칙을 추가하면 해결 (백엔드는 텍스트 재작성만 수행).
-훅 자동 모드: install.sh가 출력하는 settings 스니펫 참조. `#raw` 태그로 우회, 6토큰 미만·800자 초과는 자동 무개입.
+## How it's validated
 
-요구사항: Python 3.10+, `claude` CLI 설치·로그인 (별도 API 키 불필요). macOS/Linux 검증됨, Windows 미검증.
+Every design decision in this repo is backed by measured experiments (blind pairwise LLM judging, ledgered in [LOOP_LOG.md](LOOP_LOG.md)):
 
-## 현재 상태
+- Golden set of 20 rough prompts: **20/20 judged better than the original** (clarity 5.0, fidelity 4.8, actionability 5.0) — [EVAL.md](EVAL.md)
+- Model profiles produce structurally different rewrites: 5/5
+- Intent routing beat profile-only rewriting 4–1–1 in pairwise comparison
+- Latency: ~15–30s per rewrite via `claude -p` (the price of needing no API key)
 
-- **Phase 0 (조사·기획): 완료** — 2026-08-11
-- **Phase 1 (MVP): 완료** — 2026-08-11. 골든셋 20/20 "better", 프로필 간 차이 5/5 입증 ([EVAL.md](EVAL.md))
-- **Phase 2 (Claude Code 통합): 완료 — 게이트 5/5 PASS** — 2026-08-11. /pm 커맨드 + 훅 자동 모드(축약 메타로 재작성 ~15-19s) 모두 심판 검증 통과 ([LOOP_LOG.md](LOOP_LOG.md) R7)
-- **Phase 3 (MCP 서버): 완료 — 게이트 3/3 PASS** — 2026-08-12. `refine_prompt` MCP 서버(stdio, 의존성 0) + 독립 클라이언트 실측 ([LOOP_LOG.md](LOOP_LOG.md) R19~R20). Cursor 실기기 검증은 사용자 확인 대기
-- 개선 루프 인프라: [GATES.md](GATES.md)(동결 기준) + [LOOP_LOG.md](LOOP_LOG.md)(원장) + [PROMPT.md](PROMPT.md)(세션 재개 블록)
-- 다음: Phase 4 (사용 데이터 기반 개선), PLAN.md 참고
+Honest caveats live in [EVAL.md](EVAL.md): small n, single LLM judge, "better prompt" ≠ proven higher task success rate.
+
+## Development
+
+```bash
+python3 -m unittest discover tests   # 37 offline tests, no LLM calls
+python3 eval/run_eval.py             # golden-set evaluation (spawns claude)
+```
+
+Project docs (Korean): [PLAN.md](PLAN.md) · [ARCHITECTURE.md](ARCHITECTURE.md) · [RESEARCH.md](RESEARCH.md) · gate criteria in [GATES.md](GATES.md).
+
+## License
+
+[MIT](LICENSE)
