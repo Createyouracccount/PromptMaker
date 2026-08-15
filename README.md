@@ -72,16 +72,41 @@ prompt-tailor "rough request" --concise          # faster, condensed meta-prompt
 claude mcp add prompt-tailor -- prompt-tailor-mcp   # register in Claude Code
 ```
 
-## How it's validated
+## Same input, different models (real outputs)
 
-Every design decision in this repo is backed by measured experiments (blind pairwise LLM judging, ledgered in [LOOP_LOG.md](LOOP_LOG.md)):
+Input: `로그인 버그 고쳐줘` ("fix the login bug" — Korean in, Korean out):
 
-- Golden set of 20 rough prompts: **20/20 judged better than the original** (clarity 5.0, fidelity 4.8, actionability 5.0) — [EVAL.md](EVAL.md)
-- Model profiles produce structurally different rewrites: 5/5
-- Intent routing beat profile-only rewriting 4–1–1 in pairwise comparison
-- Latency: ~15–30s per rewrite via `claude -p` (the price of needing no API key)
+| target `fable-5` | target `haiku-4-5` |
+|---|---|
+| Prose: symptoms to identify first, then "find the cause and apply the simplest fix; verify by test or manual check". No step lists. | **Step 1** locate the bug (error message? where?) → **Step 2** fix ([assumption] tagged) → **Step 3** test with valid/invalid credentials → deliverable: fixed code + one-line commit message. |
 
-Honest caveats live in [EVAL.md](EVAL.md): small n, single LLM judge, "better prompt" ≠ proven higher task success rate.
+Full texts in [eval/results.json](eval/results.json).
+
+## Measured cost (n=2, 2026-08-15)
+
+| What you pay | Measured |
+|---|---|
+| Per rewrite call (haiku) | **≈$0.03 API-equivalent** · ~1.8k output tokens · 18–33s wall. ~29.5k input tokens, but ~99% is `claude -p`'s own system prompt (cached: ~8k cache-write + ~21.6k cache-read); the meta-prompt itself adds only hundreds |
+| Hook context injection | **+527 input tokens** in your main conversation (measured as token delta), and it stays in history for the rest of the session |
+| Subscription users | No per-call bill — it consumes usage quota instead |
+
+Raw data: [runs/cost_measurement.json](runs/cost_measurement.json), method: [eval/measure_cost.py](eval/measure_cost.py).
+
+## Evidence — including the negative result
+
+Every claim is backed by ledgered experiments (blind pairwise LLM judging; [LOOP_LOG.md](LOOP_LOG.md)):
+
+- **Prompt quality** (golden set of 20 *vague* requests): 20/20 judged better than the original (clarity 5.0, fidelity 4.8, actionability 5.0) — [EVAL.md](EVAL.md)
+- Model profiles produce structurally different rewrites: 5/5; intent routing beat profile-only meta 4–1–1
+- **Task outcome pilot (n=3): the raw prompt won 3–0.** On *already-clear, self-contained* codegen tasks run headless, rewriting hurt: it inflated scope, its investigation directives stalled a run, and its verification demands made the executor fabricate test results — [eval/ab_task_outcome_results.json](eval/ab_task_outcome_results.json)
+
+**What this means**: the measured benefit is on vague, underspecified requests — the golden set's territory. If your request is already specific, the rewrite is at best overhead and at worst harmful; use `#raw` (hook) or just don't invoke `/pm`. An automatic "already clear → don't touch" gate is the top item on the roadmap.
+
+## What we do NOT guarantee
+
+- **Higher task success is not proven.** Prompt-quality wins are judge-based; the only outcome data so far is the 3-task pilot above, which the raw prompt won.
+- The rewriter occasionally adds specifics without an `[assumption]` tag (fidelity 4.8, not 5.0), and can misclassify intent.
+- All experiments are small-n, single-LLM-judge, and were run in this repo's environment.
 
 ## Development
 
