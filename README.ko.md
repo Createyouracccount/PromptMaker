@@ -22,9 +22,7 @@ Claude Fable 5 / Opus 5 / Sonnet 5 / Haiku는 잘 반응하는 프롬프트 스�
 **CLI / MCP 서버:**
 
 ```bash
-git clone https://github.com/Createyouracccount/PromptTailor.git
-cd PromptTailor
-pip install .            # prompt-tailor, prompt-tailor-mcp 명령 설치
+pip install prompt-tailor    # prompt-tailor, prompt-tailor-mcp 명령 설치
 ```
 
 요구사항: Python 3.10+, `claude` CLI 설치·로그인 (별도 API 키 불필요). macOS/Linux 검증됨, Windows 미검증.

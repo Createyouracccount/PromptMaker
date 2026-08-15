@@ -44,9 +44,7 @@ This gives you the `/pm` command with no path setup.
 **As a CLI / MCP server:**
 
 ```bash
-git clone https://github.com/Createyouracccount/PromptTailor.git
-cd PromptTailor
-pip install .            # installs `prompt-tailor` and `prompt-tailor-mcp`
+pip install prompt-tailor    # installs `prompt-tailor` and `prompt-tailor-mcp`
 ```
 
 Requirements: Python 3.10+, the `claude` CLI installed and logged in (no separate API key). Verified on macOS/Linux; Windows untested.

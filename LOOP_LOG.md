@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-08-15 · R31 (PyPI 배포 완료 — Trusted Publishing)
+
+- **완료**: 사용자가 pending publisher 등록(prompt-tailor / Createyouracccount/PromptTailor / publish.yml / env pypi) → publish.yml(OIDC, 토큰 없음) 추가 → workflow_dispatch 트리거 → **publish run success**(attestation 포함)
+- **실측**: pypi.org/pypi/prompt-tailor/json → `prompt-tailor 0.1.0` LIVE. 깨끗한 venv에서 `pip install prompt-tailor` → `prompt-tailor --version` 0.1.0 — **실제 PyPI 설치 검증 완료**
+- **README 갱신**: 설치 안내를 clone 방식에서 `pip install prompt-tailor` 한 줄로 교체(영/한)
+- **배포 채널 최종 상태**: ① 플러그인 2줄(`/plugin marketplace add Createyouracccount/PromptTailor` → `/plugin install prompt-tailor@prompt-tailor`) ② `pip install prompt-tailor` ③ GitHub Release v0.1.0. 이후 버전업은 pyproject version bump → 릴리스 발행 시 자동 배포
+- **다음 인수 지점**: Phase 4 — 실사용 데이터(수락/거부) 수집, Cursor 실기기 검증(사용자), 홍보 여부는 사용자 판단
+
 ## 2026-08-15 · R30 (PromptTailor 전면 리브랜딩 — PyPI 이름 차단 대응)
 
 - **배경**: PyPI가 `promptmaker`를 기존 `prompt-maker`와 혼동 유사(구분자 차이)로 차단. 이름 심사(후보 26종 가용성 전수 확인, 유사 변형 포함) → 사용자 승인으로 **prompt-tailor** 확정 — "모델에 맞춰 재단"이라는 차별점을 이름이 직접 전달
