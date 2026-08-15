@@ -40,7 +40,7 @@ class ClaudeCLINotFoundError(Exception):
 # matching block routes what the rewrite must pin down. Adopted after pairwise
 # eval vs the model-profile-only meta (LOOP_LOG R22).
 INTENT_RULES = """\
-- fix/debug: 증상·재현 경로·기대 동작을 먼저 파악하게 하고, 최소 수정 범위와 수정 후 검증 방법을 명시
+- fix/debug: 증상·재현 경로·기대 동작을 사용자 확인이나 코드 조사로 파악하게 하고(기준 수치·기일을 지어내지 말 것), 최소 수정 범위와 수정 후 검증 방법을 명시
 - build: 목표와 의도, 1차 범위(MVP) 경계, 완료 기준을 명시하고 범위 밖 항목은 제외임을 명시
 - research: 조사 대상과 산출물 형식(구조·분량)을 지정하고 코드 수정은 하지 않음을 명시
 - refactor: 동작 불변 조건과 테스트로 검증함을 명시하고 대상 범위를 한정
