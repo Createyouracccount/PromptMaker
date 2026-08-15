@@ -1,12 +1,12 @@
 #!/bin/bash
-# PromptMaker Claude Code 통합 설치
+# PromptTailor Claude Code 통합 설치
 # - /pm 슬래시 커맨드를 ~/.claude/commands/에 복사
 # - 훅 자동 모드는 설정 스니펫만 출력 (settings.json 자동 수정 안 함 — 옵트인)
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 mkdir -p "$HOME/.claude/commands"
-sed "s|__PROMPTMAKER_ROOT__|$REPO_ROOT|g" "$REPO_ROOT/claude-code/commands/pm.md" > "$HOME/.claude/commands/pm.md"
+sed "s|__PROMPT_TAILOR_ROOT__|$REPO_ROOT|g" "$REPO_ROOT/claude-code/commands/pm.md" > "$HOME/.claude/commands/pm.md"
 echo "✓ /pm 커맨드 설치됨: ~/.claude/commands/pm.md"
 
 cat <<EOF

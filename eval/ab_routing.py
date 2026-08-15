@@ -17,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from promptmaker.engine import (  # noqa: E402
+from prompt_tailor.engine import (  # noqa: E402
     CONDENSED_TEMPLATE,
     PROFILES_DIR,
     build_meta_prompt,

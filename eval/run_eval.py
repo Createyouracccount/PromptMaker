@@ -1,4 +1,4 @@
-"""Golden-set evaluation for promptmaker.
+"""Golden-set evaluation for prompt-tailor.
 
 For each golden item:
   1. rewrite raw -> fable-5-targeted prompt
@@ -24,7 +24,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from promptmaker.engine import call_claude, parse_json_output, rewrite  # noqa: E402
+from prompt_tailor.engine import call_claude, parse_json_output, rewrite  # noqa: E402
 
 JUDGE_MODEL = "claude-sonnet-5"
 DIFF_ITEMS = {"g01", "g05", "g09", "g18", "g19"}  # profile-difference check subset

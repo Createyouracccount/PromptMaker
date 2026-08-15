@@ -1,5 +1,5 @@
 [project]
-name = "promptmaker"
+name = "prompt-tailor"
 version = "0.1.0"
 description = "Model-aware prompt refinement tool for Claude Code users"
 readme = "README.md"
@@ -9,19 +9,19 @@ dependencies = []
 keywords = ["claude", "claude-code", "prompt", "prompt-engineering", "mcp"]
 
 [project.urls]
-Repository = "https://github.com/Createyouracccount/PromptMaker"
-Issues = "https://github.com/Createyouracccount/PromptMaker/issues"
+Repository = "https://github.com/Createyouracccount/PromptTailor"
+Issues = "https://github.com/Createyouracccount/PromptTailor/issues"
 
 [project.scripts]
-promptmaker = "promptmaker.cli:main"
-promptmaker-mcp = "promptmaker.mcp_server:main"
+prompt-tailor = "prompt_tailor.cli:main"
+prompt-tailor-mcp = "prompt_tailor.mcp_server:main"
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["promptmaker*"]
+include = ["prompt_tailor*"]
 
 [tool.setuptools.package-data]
-promptmaker = ["profiles/*.md", "profiles/condensed/*.md"]
+prompt_tailor = ["profiles/*.md", "profiles/condensed/*.md"]

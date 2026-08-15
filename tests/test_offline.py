@@ -15,13 +15,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from promptmaker.detect import (  # noqa: E402
+from prompt_tailor.detect import (  # noqa: E402
     _model_from_settings,
     _model_from_transcript,
     detect_model,
     normalize_model,
 )
-from promptmaker.engine import (  # noqa: E402
+from prompt_tailor.engine import (  # noqa: E402
     build_meta_prompt,
     parse_json_output,
     resolve_profile,
@@ -107,7 +107,7 @@ class TestRewriteRetry(unittest.TestCase):
     """Retry loop must treat timeouts as attempt failures, not crash through."""
 
     def _patch_call_claude(self, side_effects):
-        import promptmaker.engine as engine
+        import prompt_tailor.engine as engine
         calls = {"n": 0}
 
         def fake(prompt, model, timeout=180):
@@ -125,7 +125,7 @@ class TestRewriteRetry(unittest.TestCase):
     def test_timeout_is_retried(self):
         import subprocess as sp
 
-        from promptmaker.engine import rewrite
+        from prompt_tailor.engine import rewrite
 
         ok = '{"intent": "fix", "rewritten_prompt": "다시 쓴 프롬프트", "changes": ["c"]}'
         calls = self._patch_call_claude([sp.TimeoutExpired(cmd="claude", timeout=1), ok])
@@ -136,7 +136,7 @@ class TestRewriteRetry(unittest.TestCase):
     def test_exhausted_retries_raise_runtime_error(self):
         import subprocess as sp
 
-        from promptmaker.engine import rewrite
+        from prompt_tailor.engine import rewrite
 
         self._patch_call_claude([sp.TimeoutExpired(cmd="claude", timeout=1)])
         with self.assertRaises(RuntimeError):
@@ -229,13 +229,13 @@ class TestMcpServerProtocol(unittest.TestCase):
     """Protocol-level tests — no LLM calls (tools/call with empty raw only)."""
 
     def _req(self, method, params=None, req_id=1):
-        from promptmaker.mcp_server import handle_request
+        from prompt_tailor.mcp_server import handle_request
         return handle_request({"jsonrpc": "2.0", "id": req_id, "method": method,
                                "params": params or {}})
 
     def test_initialize(self):
         resp = self._req("initialize", {"protocolVersion": "2025-06-18"})
-        self.assertEqual(resp["result"]["serverInfo"]["name"], "promptmaker")
+        self.assertEqual(resp["result"]["serverInfo"]["name"], "prompt-tailor")
         self.assertIn("tools", resp["result"]["capabilities"])
 
     def test_tools_list(self):
@@ -246,7 +246,7 @@ class TestMcpServerProtocol(unittest.TestCase):
         self.assertIn("raw", tools[0]["inputSchema"]["required"])
 
     def test_notification_returns_none(self):
-        from promptmaker.mcp_server import handle_request
+        from prompt_tailor.mcp_server import handle_request
         self.assertIsNone(handle_request({"jsonrpc": "2.0",
                                           "method": "notifications/initialized"}))
 

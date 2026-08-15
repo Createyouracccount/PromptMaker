@@ -1,4 +1,4 @@
-# PromptMaker
+# PromptTailor
 
 > 프롬프트 작성이 어려운 Claude Code 사용자를 위한 도구. 대충 쓴 요청을 **현재 선택된 모델에 가장 어울리는 형태로** 재작성합니다.
 
@@ -6,7 +6,7 @@
 
 ## 왜 필요한가
 
-Claude Fable 5 / Opus 5 / Sonnet 5 / Haiku는 잘 반응하는 프롬프트 스타일이 서로 다릅니다 — Fable은 단계 나열 없이 목표·제약을 산문으로, Opus는 검증 지시를 넣으면 과잉 검증, Haiku는 작은 번호 단계를 선호합니다. PromptMaker는 이 차이를 [모델 프로필](promptmaker/profiles/) 데이터로 관리하고, 현재 모델을 자동 감지해 맞춤 재작성합니다. 작업 유형(fix/build/research/refactor/docs)별 라우팅도 적용됩니다.
+Claude Fable 5 / Opus 5 / Sonnet 5 / Haiku는 잘 반응하는 프롬프트 스타일이 서로 다릅니다 — Fable은 단계 나열 없이 목표·제약을 산문으로, Opus는 검증 지시를 넣으면 과잉 검증, Haiku는 작은 번호 단계를 선호합니다. PromptTailor는 이 차이를 [모델 프로필](prompt_tailor/profiles/) 데이터로 관리하고, 현재 모델을 자동 감지해 맞춤 재작성합니다. 작업 유형(fix/build/research/refactor/docs)별 라우팅도 적용됩니다.
 
 입력 언어는 유지됩니다: 한국어 입력 → 한국어 출력.
 
@@ -15,16 +15,16 @@ Claude Fable 5 / Opus 5 / Sonnet 5 / Haiku는 잘 반응하는 프롬프트 스�
 **Claude Code 플러그인 (권장):**
 
 ```
-/plugin marketplace add Createyouracccount/PromptMaker
-/plugin install promptmaker@promptmaker
+/plugin marketplace add Createyouracccount/PromptTailor
+/plugin install prompt-tailor@prompt-tailor
 ```
 
 **CLI / MCP 서버:**
 
 ```bash
-git clone https://github.com/Createyouracccount/PromptMaker.git
-cd PromptMaker
-pip install .            # promptmaker, promptmaker-mcp 명령 설치
+git clone https://github.com/Createyouracccount/PromptTailor.git
+cd PromptTailor
+pip install .            # prompt-tailor, prompt-tailor-mcp 명령 설치
 ```
 
 요구사항: Python 3.10+, `claude` CLI 설치·로그인 (별도 API 키 불필요). macOS/Linux 검증됨, Windows 미검증.
@@ -32,9 +32,9 @@ pip install .            # promptmaker, promptmaker-mcp 명령 설치
 ## 사용법
 
 ```bash
-promptmaker "대충 쓴 요청" --model fable-5          # 재작성 결과 출력
-promptmaker "요청" --model haiku-4-5 --json        # JSON 출력
-promptmaker "요청" --concise                       # 축약 메타프롬프트 (빠름)
+prompt-tailor "대충 쓴 요청" --model fable-5          # 재작성 결과 출력
+prompt-tailor "요청" --model haiku-4-5 --json        # JSON 출력
+prompt-tailor "요청" --concise                       # 축약 메타프롬프트 (빠름)
 ```
 
 **Claude Code 안에서** — `/pm 대충 쓴 요청`: 현재 모델에 맞게 재작성 후 변경 요약 한 줄을 보여주고 수행. auto 모드에서 프롬프트에 위험해 보이는 단어가 있으면 분류기가 백엔드를 오탐 차단할 수 있음 — `claude-code/install.sh`가 안내하는 permissions.allow 규칙을 추가하면 해결(백엔드는 텍스트 재작성만 수행).
@@ -45,7 +45,7 @@ promptmaker "요청" --concise                       # 축약 메타프롬프트
 
 ```jsonc
 // ~/.cursor/mcp.json
-{ "mcpServers": { "promptmaker": { "command": "promptmaker-mcp" } } }
+{ "mcpServers": { "prompt-tailor": { "command": "prompt-tailor-mcp" } } }
 ```
 
 ## 검증 근거

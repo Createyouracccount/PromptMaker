@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PromptMaker UserPromptSubmit hook (auto mode, opt-in).
+"""PromptTailor UserPromptSubmit hook (auto mode, opt-in).
 
 Reads hook input JSON on stdin. If the prompt looks like a rough request,
 rewrites it for the detected target model and injects the rewrite as
@@ -23,7 +23,7 @@ import sys
 import time
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent  # PromptMaker/
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent  # repo root
 sys.path.insert(0, str(REPO_ROOT))
 
 LOG_PATH = REPO_ROOT / "runs" / "hook.log"
@@ -65,10 +65,10 @@ def main() -> int:
     t0 = time.time()
     # Recursion guard: the rewrite itself spawns `claude -p`, which inherits
     # this project's settings and would re-trigger this hook (measured, P3).
-    if os.environ.get("PROMPTMAKER_ACTIVE"):
+    if os.environ.get("PROMPT_TAILOR_ACTIVE"):
         log("skip (recursion-guard)")
         return 0
-    os.environ["PROMPTMAKER_ACTIVE"] = "1"
+    os.environ["PROMPT_TAILOR_ACTIVE"] = "1"
 
     try:
         hook_input = json.load(sys.stdin)
@@ -83,15 +83,15 @@ def main() -> int:
         return 0
 
     try:
-        from promptmaker.detect import detect_model
-        from promptmaker.engine import rewrite
+        from prompt_tailor.detect import detect_model
+        from prompt_tailor.engine import rewrite
 
         target = detect_model(hook_input) or DEFAULT_TARGET
         # gate: 30s. intent_routing=False — the intent block pushed 2/6 calls
         # past the 28s cap in A/B; the hook keeps the lean meta (LOOP_LOG R22).
         result = rewrite(prompt, target, retries=0, timeout=28, concise=True, intent_routing=False)
         context = (
-            "[PromptMaker] 사용자의 요청을 대상 모델에 맞게 재해석했다. "
+            "[PromptTailor] 사용자의 요청을 대상 모델에 맞게 재해석했다. "
             "원문 의도를 유지하되 아래 재작성을 작업 지침으로 삼아라. "
             "[가정]으로 표시된 부분은 단정하지 말고 작업 중 확인하라.\n"
             f"<재작성 대상모델={target}>\n{result.rewritten_prompt}\n</재작성>"

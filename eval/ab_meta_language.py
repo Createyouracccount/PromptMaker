@@ -22,7 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from promptmaker.engine import build_meta_prompt, call_claude, parse_json_output  # noqa: E402
+from prompt_tailor.engine import build_meta_prompt, call_claude, parse_json_output  # noqa: E402
 
 ITEMS = ["g01", "g05", "g09", "g13", "g18", "g19"]  # diverse intents
 REWRITER = "claude-haiku-4-5"

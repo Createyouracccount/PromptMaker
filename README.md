@@ -1,4 +1,4 @@
-# PromptMaker
+# PromptTailor
 
 > Model-aware prompt rewriting for Claude Code. Write a rough request — get it rewritten the way your current Claude model works best.
 
@@ -6,14 +6,14 @@
 
 ## Why
 
-Claude Fable 5, Opus 5, Sonnet 5, and Haiku respond best to *different* prompt styles — Fable wants goals and constraints in prose (no step lists), Opus over-verifies if you tell it to double-check, Haiku wants small numbered steps. PromptMaker keeps these differences as data ([model profiles](promptmaker/profiles/)), detects which model you're running, and rewrites your rough request to match — also routing by task intent (fix / build / research / refactor / docs).
+Claude Fable 5, Opus 5, Sonnet 5, and Haiku respond best to *different* prompt styles — Fable wants goals and constraints in prose (no step lists), Opus over-verifies if you tell it to double-check, Haiku wants small numbered steps. PromptTailor keeps these differences as data ([model profiles](prompt_tailor/profiles/)), detects which model you're running, and rewrites your rough request to match — also routing by task intent (fix / build / research / refactor / docs).
 
 Your input language is preserved: English in → English out, Korean in → Korean out.
 
 ## Example
 
 ```
-$ promptmaker "fix the login bug asap, users keep getting logged out" --model fable-5
+$ prompt-tailor "fix the login bug asap, users keep getting logged out" --model fable-5
 ```
 
 > Users are repeatedly logging out unexpectedly. Before fixing, investigate: exact
@@ -35,8 +35,8 @@ Notice what happened: vague urgency ("asap") became an investigation directive, 
 **As a Claude Code plugin (recommended):**
 
 ```
-/plugin marketplace add Createyouracccount/PromptMaker
-/plugin install promptmaker@promptmaker
+/plugin marketplace add Createyouracccount/PromptTailor
+/plugin install prompt-tailor@prompt-tailor
 ```
 
 This gives you the `/pm` command with no path setup.
@@ -44,9 +44,9 @@ This gives you the `/pm` command with no path setup.
 **As a CLI / MCP server:**
 
 ```bash
-git clone https://github.com/Createyouracccount/PromptMaker.git
-cd PromptMaker
-pip install .            # installs `promptmaker` and `promptmaker-mcp`
+git clone https://github.com/Createyouracccount/PromptTailor.git
+cd PromptTailor
+pip install .            # installs `prompt-tailor` and `prompt-tailor-mcp`
 ```
 
 Requirements: Python 3.10+, the `claude` CLI installed and logged in (no separate API key). Verified on macOS/Linux; Windows untested.
@@ -54,9 +54,9 @@ Requirements: Python 3.10+, the `claude` CLI installed and logged in (no separat
 ## Usage
 
 ```bash
-promptmaker "rough request" --model fable-5    # rewrite for a target model
-promptmaker "rough request" --json             # JSON output
-promptmaker "rough request" --concise          # faster, condensed meta-prompt
+prompt-tailor "rough request" --model fable-5    # rewrite for a target model
+prompt-tailor "rough request" --json             # JSON output
+prompt-tailor "rough request" --concise          # faster, condensed meta-prompt
 ```
 
 **Inside Claude Code** — `/pm rough request`: rewrites for your session's detected model, shows a one-line change summary, then executes the rewritten request. In auto mode, add the permission rule printed by `claude-code/install.sh` so prompts containing risky-looking words (e.g. "docker prune") aren't false-positive blocked — the backend only rewrites text.
@@ -67,11 +67,11 @@ promptmaker "rough request" --concise          # faster, condensed meta-prompt
 
 ```jsonc
 // ~/.cursor/mcp.json
-{ "mcpServers": { "promptmaker": { "command": "promptmaker-mcp" } } }
+{ "mcpServers": { "prompt-tailor": { "command": "prompt-tailor-mcp" } } }
 ```
 
 ```bash
-claude mcp add promptmaker -- promptmaker-mcp   # register in Claude Code
+claude mcp add prompt-tailor -- prompt-tailor-mcp   # register in Claude Code
 ```
 
 ## How it's validated

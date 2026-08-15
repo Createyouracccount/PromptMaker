@@ -1,12 +1,12 @@
 {
-  "name": "promptmaker",
+  "name": "prompt-tailor",
   "owner": {
     "name": "Createyouracccount",
-    "url": "https://github.com/Createyouracccount/PromptMaker"
+    "url": "https://github.com/Createyouracccount/PromptTailor"
   },
   "plugins": [
     {
-      "name": "promptmaker",
+      "name": "prompt-tailor",
       "source": "./",
       "description": "Model-aware prompt rewriting: /pm rewrites a rough request for the Claude model you are running, routed by task intent."
     }

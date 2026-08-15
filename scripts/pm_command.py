@@ -17,8 +17,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from promptmaker.detect import detect_model  # noqa: E402
-from promptmaker.engine import rewrite  # noqa: E402
+from prompt_tailor.detect import detect_model  # noqa: E402
+from prompt_tailor.engine import rewrite  # noqa: E402
 
 
 def main() -> int:
@@ -28,7 +28,7 @@ def main() -> int:
         return 0
     log_path = REPO_ROOT / "runs" / "pm_command.log"
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    os.environ["PROMPTMAKER_ACTIVE"] = "1"  # recursion guard for the hook
+    os.environ["PROMPT_TAILOR_ACTIVE"] = "1"  # recursion guard for the hook
     try:
         target = detect_model({"cwd": os.getcwd()}) or "fable-5"
         # Interactive path — the user waits inline. Condensed meta measured

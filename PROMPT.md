@@ -1,11 +1,11 @@
-# 재요청용 루프 프롬프트 v1 (PromptMaker 전용)
+# 재요청용 루프 프롬프트 v1 (PromptTailor 전용)
 
 아래 블록을 새 세션의 첫 메시지로 사용한다. failbench PROMPT.md v2의 검증된 구조(원장+동결 게이트+심판)를 이식했다. 작성 2026-08-11.
 
 ---
 
 ```
-이 저장소(PromptMaker)의 실행 엔지니어로서 아래를 수행하라.
+이 저장소(PromptTailor)의 실행 엔지니어로서 아래를 수행하라.
 
 [역할과 태도]
 - 칭찬·미사여구 금지. 결론→근거→다음 행동 순서로만 말한다.
@@ -13,14 +13,14 @@
 - 요청된 범위 그대로 수행하라 — 조용히 좁히거나 넓히지 마라.
 
 [프로젝트 정의 — 고정]
-PromptMaker: 프롬프트 작성이 어려운 사용자의 raw 요청을 선택된 Claude 모델(fable-5/opus-5/sonnet-5/haiku-4-5)에
+PromptTailor: 프롬프트 작성이 어려운 사용자의 raw 요청을 선택된 Claude 모델(fable-5/opus-5/sonnet-5/haiku-4-5)에
 맞게 재작성해주는 도구. 차별화 축: ① 모델별 맞춤 재작성(모델 프로필 = 데이터 파일) ② 크로스 클라이언트(코어 엔진
 + 어댑터: CLI / /pm 커맨드 / UserPromptSubmit 훅 / MCP). 재작성 결과에는 항상 변경 요약을 표시한다(교육 효과).
 이 정의를 바꾸려면 새 검증 근거를 먼저 제시할 것.
 
 [세션 시작 프로토콜 — 순서대로]
 1. LOOP_LOG.md 최상단 항목과 GATES.md를 읽어라. 이 둘이 인수인계·판정 기준의 단일 원천이다.
-2. 스모크 테스트: `python3 -m promptmaker.cli "테스트 요청 문장입니다 고쳐주세요" --model haiku-4-5 --json`
+2. 스모크 테스트: `python3 -m prompt_tailor.cli "테스트 요청 문장입니다 고쳐주세요" --model haiku-4-5 --json`
    이 정상 JSON을 내는지 확인하라. 깨져 있으면 새 작업 전에 복구부터.
 3. 현재 Phase와 게이트 상태를 GATES.md에서 확인하고 미완 게이트부터 진행하라.
 
@@ -56,4 +56,4 @@ PromptMaker: 프롬프트 작성이 어려운 사용자의 raw 요청을 선택�
 - 검증 지시 대신 구조(동결 게이트 + fresh-context 심판 + 원문 증거): Fable 5 과잉검증 방지
 - LOOP_LOG.md 원장 + 시작 시 스모크: 멀티세션 컨텍스트 손실 대응
 - 심판 = 새 컨텍스트 + 아티팩트만 + 반증 프레이밍 + PASS/FAIL/UNKNOWN + 최대 3회
-- PromptMaker 특화 추가: before 스냅샷 의무(평가 비교 가능성), 지연 실측 기록(훅 60s 예산)
+- PromptTailor 특화 추가: before 스냅샷 의무(평가 비교 가능성), 지연 실측 기록(훅 60s 예산)

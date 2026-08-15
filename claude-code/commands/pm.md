@@ -5,7 +5,7 @@ allowed-tools: Bash(python3:*)
 
 ## 재작성 결과
 
-!`python3 __PROMPTMAKER_ROOT__/scripts/pm_command.py "$ARGUMENTS"`
+!`python3 __PROMPT_TAILOR_ROOT__/scripts/pm_command.py "$ARGUMENTS"`
 
 ## 지시
 

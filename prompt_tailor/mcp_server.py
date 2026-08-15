@@ -1,10 +1,10 @@
-"""MCP server exposing promptmaker as a `refine_prompt` tool.
+"""MCP server exposing prompt-tailor as a `refine_prompt` tool.
 
 Stdio transport, newline-delimited JSON-RPC 2.0 — no dependencies beyond the
 standard library, so any MCP client (Cursor, Claude Code, Claude Desktop)
 can spawn it with:
 
-    python3 -m promptmaker.mcp_server
+    python3 -m prompt_tailor.mcp_server
 
 Registration examples are in the README.
 """
@@ -86,7 +86,7 @@ def handle_request(req: dict) -> dict | None:
         result = {
             "protocolVersion": client_version,
             "capabilities": {"tools": {}},
-            "serverInfo": {"name": "promptmaker", "version": __version__},
+            "serverInfo": {"name": "prompt-tailor", "version": __version__},
         }
     elif method == "tools/list":
         result = {"tools": [TOOL_DEF]}

@@ -1,8 +1,8 @@
-"""promptmaker CLI.
+"""prompt-tailor CLI.
 
 Usage:
-    promptmaker "대충 쓴 요청" --model fable-5
-    echo "요청" | promptmaker --model opus-5
+    prompt-tailor "대충 쓴 요청" --model fable-5
+    echo "요청" | prompt-tailor --model opus-5
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from .engine import (
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="promptmaker",
+        prog="prompt-tailor",
         description="대충 쓴 요청을 대상 Claude 모델에 맞는 프롬프트로 재작성합니다.",
     )
     parser.add_argument("raw", nargs="?", help="원본 프롬프트 (생략 시 stdin에서 읽음)")
