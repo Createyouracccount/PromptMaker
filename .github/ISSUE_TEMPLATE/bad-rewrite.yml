@@ -1,0 +1,55 @@
+name: Bad rewrite report
+description: A rewrite that hurt — wrong scope, wrong intent, or the gate decided wrong (keep vs rewrite)
+title: "[bad-rewrite] "
+labels: ["bad-rewrite"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks — reports like this directly grow the public benchmark
+        ([BENCHMARK.md](../blob/main/BENCHMARK.md)). Redact anything private
+        from your prompt; lengths and structure are enough if the text is sensitive.
+  - type: dropdown
+    id: failure
+    attributes:
+      label: What went wrong
+      options:
+        - Rewrote a request that should have been kept (gate false positive)
+        - Kept a request that should have been rewritten (gate false negative)
+        - Rewrite inflated / changed the scope
+        - Rewrite invented specifics without an [assumption] tag
+        - Wrong intent classification (fix/build/research/refactor/docs)
+        - Other (describe below)
+    validations:
+      required: true
+  - type: textarea
+    id: raw
+    attributes:
+      label: Original prompt (redact freely)
+      description: The rough request you typed. Replace private parts with [REDACTED].
+    validations:
+      required: true
+  - type: textarea
+    id: rewritten
+    attributes:
+      label: What PromptTailor produced
+      description: The rewritten prompt (or "keep"), plus the changes summary if you have it.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Target model
+      placeholder: fable-5 / opus-5 / sonnet-5 / haiku-4-5
+  - type: textarea
+    id: stats
+    attributes:
+      label: Optional — output of `prompt-tailor stats --share`
+      description: Numbers only, never contains prompt text.
+      render: markdown
