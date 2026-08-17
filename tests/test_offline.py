@@ -277,5 +277,87 @@ class TestEstimateTokens(unittest.TestCase):
         self.assertGreaterEqual(pm_hook.estimate_tokens("a b c d e f g h i j k l"), 12)
 
 
+class TestUsageRecords(unittest.TestCase):
+    def setUp(self):
+        import os
+        self._tmp = tempfile.TemporaryDirectory()
+        os.environ["PROMPT_TAILOR_DATA_DIR"] = self._tmp.name
+
+    def tearDown(self):
+        import os
+        del os.environ["PROMPT_TAILOR_DATA_DIR"]
+        self._tmp.cleanup()
+
+    def test_record_and_load_roundtrip(self):
+        from prompt_tailor import usage
+        usage.record_event("hook", "rewrite", target="fable-5", latency_s=14.23, prompt_chars=40)
+        usage.record_event("hook", "keep", target="fable-5", latency_s=9.0, prompt_chars=120)
+        usage.record_event("pm", "error", detail="TimeoutExpired")
+        events = usage.load_events()
+        self.assertEqual(len(events), 3)
+        self.assertEqual(events[0]["latency_s"], 14.2)
+        self.assertNotIn("prompt", events[0])  # privacy: no prompt text field
+
+    def test_no_prompt_text_anywhere(self):
+        from prompt_tailor import usage
+        secret = "회사 기밀 프롬프트 내용"
+        usage.record_event("cli", "rewrite", target="haiku-4-5", prompt_chars=len(secret))
+        content = usage.usage_path().read_text(encoding="utf-8")
+        self.assertNotIn(secret, content)
+
+    def test_summarize(self):
+        from prompt_tailor import usage
+        usage.record_event("hook", "rewrite", target="fable-5", latency_s=10.0)
+        usage.record_event("hook", "rewrite", target="fable-5", latency_s=20.0)
+        usage.record_event("hook", "keep", latency_s=8.0)
+        usage.record_event("hook", "skip", detail="too-short")
+        usage.record_event("mcp", "error", detail="RuntimeError")
+        s = usage.summarize(usage.load_events())
+        self.assertEqual(s["total"], 5)
+        self.assertEqual(s["by_action"]["rewrite"], 2)
+        self.assertEqual(s["keep_rate"], 0.33)  # 1 keep / 3 gated
+        self.assertEqual(s["latency"]["rewrite"]["avg_s"], 15.0)
+        self.assertEqual(s["skip_reasons"], {"too-short": 1})
+        self.assertEqual(s["by_source"], {"hook": 4, "mcp": 1})
+
+    def test_summarize_empty_and_torn_line(self):
+        from prompt_tailor import usage
+        s = usage.summarize(usage.load_events())
+        self.assertEqual(s["total"], 0)
+        self.assertIsNone(s["keep_rate"])
+        usage.usage_path().parent.mkdir(parents=True, exist_ok=True)
+        usage.usage_path().write_text('{"ts": "x", "source": "hook", "act\n', encoding="utf-8")
+        self.assertEqual(usage.load_events(), [])  # torn write tolerated
+
+    def test_format_stats_and_share(self):
+        from prompt_tailor import usage
+        usage.record_event("hook", "rewrite", target="fable-5", latency_s=10.0)
+        usage.record_event("pm", "keep", latency_s=8.0)
+        s = usage.summarize(usage.load_events())
+        text = usage.format_stats(s)
+        self.assertIn("rewrite", text)
+        self.assertIn("keep 비율", text)
+        share = usage.format_stats(s, share=True)
+        self.assertIn("| rewrite | 1", share)
+        self.assertIn("no prompt text", share)
+
+    def test_cli_stats_runs(self):
+        import contextlib
+        import io
+        from prompt_tailor import usage
+        from prompt_tailor.cli import main as cli_main
+        usage.record_event("cli", "rewrite", target="fable-5", latency_s=12.0)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = cli_main(["stats"])
+        self.assertEqual(rc, 0)
+        self.assertIn("rewrite", buf.getvalue())
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = cli_main(["stats", "--json"])
+        self.assertEqual(rc, 0)
+        self.assertEqual(json.loads(buf.getvalue())["total"], 1)
+
+
 if __name__ == "__main__":
     unittest.main()

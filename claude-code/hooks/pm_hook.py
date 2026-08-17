@@ -39,6 +39,16 @@ def log(msg: str) -> None:
         pass
 
 
+def record(action: str, **kw) -> None:
+    """Usage record in ~/.claude/prompt-tailor/ (no prompt text). Never raises —
+    imported lazily so a broken install still fails open."""
+    try:
+        from prompt_tailor.usage import record_event
+        record_event("hook", action, **kw)
+    except Exception:
+        pass
+
+
 def estimate_tokens(text: str) -> int:
     """Rough token estimate good enough for a skip threshold.
     Korean ~2 chars/token, English ~4 chars/token — use chars/2 when the
@@ -80,6 +90,7 @@ def main() -> int:
     reason = should_skip(prompt)
     if reason:
         log(f"skip ({reason}): {prompt[:60]!r}")
+        record("skip", detail=reason, prompt_chars=len(prompt))
         return 0
 
     try:
@@ -93,6 +104,7 @@ def main() -> int:
         if result.action == "keep":
             # already-clear prompt: no injection, no token overhead
             log(f"skip (already-clear, {time.time() - t0:.1f}s): {prompt[:60]!r}")
+            record("keep", target=target, latency_s=time.time() - t0, prompt_chars=len(prompt))
             return 0
         context = (
             "[PromptTailor] 사용자의 요청을 대상 모델에 맞게 재해석했다. "
@@ -108,8 +120,10 @@ def main() -> int:
             "suppressOutput": True,
         }, ensure_ascii=False))
         log(f"rewrote ({target}, {time.time() - t0:.1f}s): {prompt[:60]!r}")
+        record("rewrite", target=target, latency_s=time.time() - t0, prompt_chars=len(prompt))
     except Exception as e:  # fail-open: never block the user's prompt
         log(f"ERROR ({time.time() - t0:.1f}s): {type(e).__name__}: {e}")
+        record("error", latency_s=time.time() - t0, detail=type(e).__name__)
     return 0
 
 

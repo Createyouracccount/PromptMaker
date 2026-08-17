@@ -19,6 +19,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from prompt_tailor.detect import detect_model  # noqa: E402
 from prompt_tailor.engine import rewrite  # noqa: E402
+from prompt_tailor.usage import record_event  # noqa: E402
 
 
 def main() -> int:
@@ -29,6 +30,7 @@ def main() -> int:
     log_path = REPO_ROOT / "runs" / "pm_command.log"
     log_path.parent.mkdir(parents=True, exist_ok=True)
     os.environ["PROMPT_TAILOR_ACTIVE"] = "1"  # recursion guard for the hook
+    t0 = time.time()
     try:
         target = detect_model({"cwd": os.getcwd()}) or "fable-5"
         # Interactive path — the user waits inline. Condensed meta measured
@@ -42,10 +44,13 @@ def main() -> int:
         }, ensure_ascii=False, indent=2))
         with log_path.open("a", encoding="utf-8") as f:
             f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} ok target={target} raw={raw[:60]!r}\n")
+        record_event("pm", r.action, target=target,
+                     latency_s=time.time() - t0, prompt_chars=len(raw))
     except Exception as e:
         print(json.dumps({"error": f"{type(e).__name__}: {e}"}, ensure_ascii=False))
         with log_path.open("a", encoding="utf-8") as f:
             f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} ERROR {type(e).__name__}: {e}\n")
+        record_event("pm", "error", latency_s=time.time() - t0, detail=type(e).__name__)
     return 0
 
 

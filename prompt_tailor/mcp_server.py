@@ -13,9 +13,11 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 
 from . import __version__
 from .engine import ClaudeCLINotFoundError, rewrite
+from .usage import record_event
 
 PROTOCOL_VERSION = "2025-06-18"
 
@@ -50,6 +52,7 @@ def _handle_tool_call(arguments: dict) -> dict:
     raw = arguments.get("raw", "")
     if not raw.strip():
         return {"content": [{"type": "text", "text": "error: empty raw prompt"}], "isError": True}
+    t0 = time.time()
     try:
         r = rewrite(
             raw,
@@ -65,11 +68,14 @@ def _handle_tool_call(arguments: dict) -> dict:
             "rewritten_prompt": r.rewritten_prompt,
             "changes": r.changes,
         }
+        record_event("mcp", r.action, target=r.target_model,
+                     latency_s=time.time() - t0, prompt_chars=len(raw))
         return {
             "content": [{"type": "text", "text": json.dumps(payload, ensure_ascii=False, indent=2)}],
             "structuredContent": payload,
         }
     except (ValueError, RuntimeError, ClaudeCLINotFoundError) as e:
+        record_event("mcp", "error", latency_s=time.time() - t0, detail=type(e).__name__)
         return {"content": [{"type": "text", "text": f"error: {e}"}], "isError": True}
 
 
