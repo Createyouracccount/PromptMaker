@@ -57,7 +57,7 @@ prompt-tailor "rough request" --json             # JSON output
 prompt-tailor "rough request" --concise          # faster, condensed meta-prompt
 ```
 
-**Inside Claude Code** — `/pm rough request`: rewrites for your session's detected model, shows a one-line change summary, then executes the rewritten request. In auto mode, add the permission rule printed by `claude-code/install.sh` so prompts containing risky-looking words (e.g. "docker prune") aren't false-positive blocked — the backend only rewrites text.
+**Inside Claude Code** — `/pm rough request`: rewrites for your session's detected model, shows a one-line change summary, then executes the rewritten request. If `/pm` reports "Unknown command" (some clients, e.g. the VSCode extension, register plugin commands under their namespace), use `/prompt-tailor:pm` instead. In auto mode, add the permission rule printed by `claude-code/install.sh` so prompts containing risky-looking words (e.g. "docker prune") aren't false-positive blocked — the backend only rewrites text.
 
 **Hook auto mode (opt-in)** — rewrite every prompt automatically via a `UserPromptSubmit` hook. Run `bash claude-code/install.sh` for the settings snippet. Escape hatch: include `#raw` in a prompt to pass it through untouched. Prompts under 6 tokens or over 800 chars are skipped; if a rewrite doesn't finish within 28s it fails open (your original prompt goes through).
 
@@ -102,6 +102,17 @@ Every claim is backed by ledgered experiments (blind pairwise LLM judging; [LOOP
 
 **What this means**: the measured benefit is on vague, underspecified requests — the golden set's territory. Already-clear requests should be left alone, so since v0.2.0 the rewriter runs a **clarity gate** first: if your request is already specific it returns it untouched (`action: keep`; the hook then injects nothing). Gate accuracy on a balanced 40-prompt benchmark: **39/40 (98%)** — vague recall 20/20, clear recall 19/20. Dataset, runner, and the one miss are documented in [BENCHMARK.md](BENCHMARK.md).
 
+## Usage records, privacy, and how to help improve it
+
+Every rewrite path logs one privacy-safe event (action, source, target model, latency, prompt *length* — **never prompt text**) to `~/.claude/prompt-tailor/usage.jsonl` on your machine. **Nothing is ever transmitted** — there is no telemetry; we cannot see your usage.
+
+```bash
+prompt-tailor stats           # summarize your own records: keep/rewrite rate, latency, errors
+prompt-tailor stats --share   # numbers-only markdown block, safe to paste into an issue
+```
+
+Because there is no telemetry, improvement runs on what you choose to share: if a rewrite hurt (wrong scope, wrong gate decision, invented specifics), file a [bad-rewrite report](../../issues/new?template=bad-rewrite.yml) — reports feed the public [benchmark](BENCHMARK.md) and golden set that gate every change.
+
 ## What we do NOT guarantee
 
 - **Higher task success is not proven.** Prompt-quality wins are judge-based; the only outcome data so far is the 3-task pilot above, which the raw prompt won.
@@ -111,7 +122,7 @@ Every claim is backed by ledgered experiments (blind pairwise LLM judging; [LOOP
 ## Development
 
 ```bash
-python3 -m unittest discover tests   # 37 offline tests, no LLM calls
+python3 -m unittest discover tests   # 42 offline tests, no LLM calls
 python3 eval/run_eval.py             # golden-set evaluation (spawns claude)
 ```
 

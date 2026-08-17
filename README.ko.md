@@ -35,7 +35,7 @@ prompt-tailor "요청" --model haiku-4-5 --json        # JSON 출력
 prompt-tailor "요청" --concise                       # 축약 메타프롬프트 (빠름)
 ```
 
-**Claude Code 안에서** — `/pm 대충 쓴 요청`: 현재 모델에 맞게 재작성 후 변경 요약 한 줄을 보여주고 수행. auto 모드에서 프롬프트에 위험해 보이는 단어가 있으면 분류기가 백엔드를 오탐 차단할 수 있음 — `claude-code/install.sh`가 안내하는 permissions.allow 규칙을 추가하면 해결(백엔드는 텍스트 재작성만 수행).
+**Claude Code 안에서** — `/pm 대충 쓴 요청`: 현재 모델에 맞게 재작성 후 변경 요약 한 줄을 보여주고 수행. `/pm`이 "Unknown command"로 나오면(VSCode 확장 등 일부 클라이언트는 플러그인 명령을 네임스페이스로 등록) `/prompt-tailor:pm`으로 호출. auto 모드에서 프롬프트에 위험해 보이는 단어가 있으면 분류기가 백엔드를 오탐 차단할 수 있음 — `claude-code/install.sh`가 안내하는 permissions.allow 규칙을 추가하면 해결(백엔드는 텍스트 재작성만 수행).
 
 **훅 자동 모드 (옵트인)** — 모든 프롬프트를 자동 재작성. `bash claude-code/install.sh`가 출력하는 settings 스니펫 참조. `#raw` 태그로 건별 우회, 6토큰 미만·800자 초과는 자동 무개입, 28초 내 미완료 시 원문 그대로 통과(fail-open).
 
@@ -76,6 +76,17 @@ prompt-tailor "요청" --concise                       # 축약 메타프롬프�
 
 **해석**: 실측된 이득은 **모호하고 불충분한 요청**(골든셋 영역)에 있습니다. 그래서 v0.2.0부터 재작성기가 **명확도 게이트**를 먼저 통과시킵니다: 이미 구체적인 요청은 원문 그대로 반환하고(`action: keep`), 훅은 주입 자체를 건너뜁니다. 균형 40건 벤치마크에서 게이트 정확도 **39/40 (98%)** — 모호 재현율 20/20, 명확 재현율 19/20. 데이터셋·러너·오판 1건은 [BENCHMARK.md](BENCHMARK.md)에 기록.
 
+## 사용 기록·개인정보·개선에 참여하는 법
+
+모든 재작성 경로가 이벤트 1건(action, 경로, 대상 모델, 지연, 프롬프트 *길이* — **원문 텍스트는 절대 미포함**)을 사용자 기기의 `~/.claude/prompt-tailor/usage.jsonl`에 기록합니다. **어디로도 전송되지 않습니다** — 텔레메트리 없음, 우리는 여러분의 사용을 볼 수 없습니다.
+
+```bash
+prompt-tailor stats           # 내 기록 요약: keep/rewrite 비율, 지연, 에러
+prompt-tailor stats --share   # 이슈에 붙여넣기 좋은 숫자-전용 마크다운 블록
+```
+
+텔레메트리가 없으므로 개선은 여러분이 공유하기로 선택한 것으로 굴러갑니다: 재작성이 해가 됐다면(범위 왜곡, 게이트 오판, 세부 날조) [bad-rewrite 리포트](../../issues/new?template=bad-rewrite.yml)를 남겨주세요 — 리포트는 모든 변경을 검증하는 공개 [벤치마크](BENCHMARK.md)·골든셋에 반영됩니다.
+
 ## 보장하지 않는 것
 
 - **실제 작업 성공률 상승은 입증되지 않았습니다.** 품질 승리는 심판 기반이고, 유일한 결과 데이터는 위의 파일럿(원문 승)입니다.
@@ -85,7 +96,7 @@ prompt-tailor "요청" --concise                       # 축약 메타프롬프�
 ## 개발
 
 ```bash
-python3 -m unittest discover tests   # 오프라인 테스트 37건 (LLM 호출 없음)
+python3 -m unittest discover tests   # 오프라인 테스트 42건 (LLM 호출 없음)
 python3 eval/run_eval.py             # 골든셋 평가
 ```
 
